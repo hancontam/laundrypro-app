@@ -33,7 +33,7 @@ export default function SetPasswordScreen() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   // ── Validation ──
-  const minLength = password.length >= 6;
+  const minLength = password.length >= 8;
   const hasMatch = password === confirmPassword && confirmPassword.length > 0;
   const isValid = minLength && hasMatch;
 
@@ -91,7 +91,7 @@ export default function SetPasswordScreen() {
               <LockSimple size={20} color={Colors.slate400} weight="bold" />
               <TextInput
                 className="ml-3 flex-1 py-3.5 text-base font-semibold text-slate-900"
-                placeholder="Tối thiểu 6 ký tự"
+                placeholder="Tối thiểu 8 ký tự"
                 placeholderTextColor={Colors.slate300}
                 secureTextEntry={!showPassword}
                 value={password}
@@ -144,7 +144,7 @@ export default function SetPasswordScreen() {
             className="mb-8 rounded-2xl border border-slate-100 bg-white p-4"
             style={shadowCard}
           >
-            <ValidationRow label="Tối thiểu 6 ký tự" isValid={minLength} />
+            <ValidationRow label="Tối thiểu 8 ký tự" isValid={minLength} />
             <ValidationRow label="Mật khẩu khớp nhau" isValid={hasMatch} />
           </View>
 
