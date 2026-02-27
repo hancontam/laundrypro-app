@@ -9,13 +9,34 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-navigation/native": "^7.1.31",
+    "@react-navigation/native-stack": "^7.14.2",
+    "@reduxjs/toolkit": "^2.11.2",
+    "axios": "^1.13.5",
     "expo": "~55.0.2",
+    "expo-firebase-recaptcha": "^2.3.1",
+    "expo-font": "^55.0.4",
+    "expo-linear-gradient": "^55.0.8",
+    "expo-secure-store": "^55.0.8",
+    "expo-splash-screen": "^55.0.10",
     "expo-status-bar": "~55.0.4",
+    "firebase": "^12.9.0",
+    "nativewind": "^4.2.2",
+    "phosphor-react-native": "^3.0.3",
     "react": "19.2.0",
-    "react-native": "0.83.2"
+    "react-native": "0.83.2",
+    "react-native-safe-area-context": "^5.7.0",
+    "react-native-screens": "^4.24.0",
+    "react-native-svg": "^15.15.3",
+    "react-native-webview": "^13.16.0",
+    "react-redux": "^9.2.0",
+    "tailwindcss": "^3.4.19"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "babel-preset-expo": "^55.0.9",
     "typescript": "~5.9.2"
   },
   "private": true
