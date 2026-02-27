@@ -22,6 +22,7 @@ import {
   labelStyle,
 } from '@/theme/tokens';
 import type { Order, OrderStatus } from '../types';
+import type { User } from '@/features/auth/types';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type MainStackParamList = {
@@ -69,11 +70,18 @@ function formatDate(iso: string): string {
 // ─── Order card ──────────────────────────────────────────────────
 function OrderCard({
   order,
+  currentUser,
   onPress,
 }: {
   order: Order;
+  currentUser?: User | null;
   onPress: () => void;
 }) {
+  // If order.customerId is missing or unpopulated string, fallback to currentUser (if they are a customer)
+  const isPopulatedCustomer = order.customerId && typeof order.customerId === 'object';
+  const displayCustomerName = isPopulatedCustomer
+    ? order.customerId.name || order.customerId.phone
+    : currentUser?.name || currentUser?.phone || '—';
   return (
     <Pressable
       onPress={onPress}
@@ -90,7 +98,7 @@ function OrderCard({
 
       {/* Customer name */}
       <Text className="mb-1 text-base font-bold text-slate-900">
-        {order.customerId?.name || order.customerId?.phone || '—'}
+        {displayCustomerName}
       </Text>
 
       {/* Items count + Total */}
@@ -158,10 +166,11 @@ export default function OrderListScreen({ navigation }: Props) {
     ({ item }: { item: Order }) => (
       <OrderCard
         order={item}
+        currentUser={user}
         onPress={() => navigation.navigate('OrderDetail', { orderId: item._id })}
       />
     ),
-    [navigation],
+    [navigation, user],
   );
 
   const renderFooter = () => {

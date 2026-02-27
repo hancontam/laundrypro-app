@@ -5,6 +5,8 @@ import authReducer from '@/features/auth/authSlice';
 import ordersReducer from '@/features/orders/ordersSlice';
 import servicesReducer from '@/features/services/servicesSlice';
 import usersReducer from '@/features/users/usersSlice';
+import customersReducer from '@/features/customers/customersSlice';
+import profileReducer from '@/features/profile/profileSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +14,8 @@ export const store = configureStore({
     orders: ordersReducer,
     services: servicesReducer,
     users: usersReducer,
+    customers: customersReducer,
+    profile: profileReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

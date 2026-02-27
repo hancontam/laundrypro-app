@@ -19,6 +19,7 @@ import {
   XCircle,
   Clock,
   LockSimple,
+  PencilSimple,
 } from 'phosphor-react-native';
 import { useAppDispatch, useAppSelector } from '@/app/store';
 import {
@@ -45,6 +46,7 @@ type MainStackParamList = {
   StaffList: undefined;
   StaffDetail: { userId: string };
   CreateStaff: undefined;
+  EditStaff: { staffId: string };
 };
 
 type Props = {
@@ -178,6 +180,13 @@ export default function StaffDetailScreen({ navigation, route }: Props) {
         <Text className="flex-1 text-lg font-extrabold text-slate-900">
           Chi tiết nhân viên
         </Text>
+        <Pressable
+          onPress={() => navigation.navigate('EditStaff', { staffId: userId })}
+          className="h-10 w-10 items-center justify-center rounded-xl bg-white"
+          style={({ pressed }) => [shadowFloating, pressedStyleSmall(pressed)]}
+        >
+          <PencilSimple size={20} color={Colors.slate700} weight="bold" />
+        </Pressable>
       </View>
 
       {error && (

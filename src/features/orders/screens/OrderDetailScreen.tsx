@@ -128,7 +128,8 @@ export default function OrderDetailScreen({ navigation, route }: Props) {
   const { orderId } = route.params;
   const dispatch = useAppDispatch();
   const { selectedOrder, isLoading, error } = useAppSelector((s) => s.orders);
-  const userRole = useAppSelector((s) => s.auth.user?.role);
+  const { user } = useAppSelector((s) => s.auth);
+  const userRole = user?.role;
 
   useEffect(() => {
     dispatch(fetchOrderByIdThunk(orderId));
@@ -170,6 +171,14 @@ export default function OrderDetailScreen({ navigation, route }: Props) {
   }
 
   const order = selectedOrder;
+
+  const isPopulatedCustomer = order?.customerId && typeof order?.customerId === 'object';
+  const displayCustomerName = isPopulatedCustomer
+    ? order.customerId.name || order.customerId.phone || '—'
+    : user?.name || user?.phone || '—';
+  const displayCustomerPhone = isPopulatedCustomer
+    ? order.customerId.phone
+    : user?.phone || '—';
 
   return (
     <SafeAreaView className="flex-1 bg-page">
@@ -245,16 +254,16 @@ export default function OrderDetailScreen({ navigation, route }: Props) {
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-bold text-slate-900">
-                  {order.customerId?.name || '—'}
+                  {displayCustomerName}
                 </Text>
                 <Text className="text-xs font-medium text-slate-500">
-                  {order.customerId?.phone}
+                  {displayCustomerPhone}
                 </Text>
               </View>
             </View>
 
             {/* Account Status */}
-            {(order.customerId?.isVerified !== undefined || order.customerId?.hasPassword !== undefined) && (
+            {isPopulatedCustomer && (order.customerId?.isVerified !== undefined || order.customerId?.hasPassword !== undefined) && (
               <View className="mt-4 flex-row items-center gap-2 border-t border-slate-100 pt-3">
                 {order.customerId.isVerified ? (
                   <View className="rounded bg-green-50 px-2 py-1">

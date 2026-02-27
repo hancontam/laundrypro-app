@@ -39,6 +39,17 @@ import ServiceFormScreen from '@/features/services/screens/ServiceFormScreen';
 import StaffListScreen from '@/features/users/screens/StaffListScreen';
 import StaffDetailScreen from '@/features/users/screens/StaffDetailScreen';
 import CreateStaffScreen from '@/features/users/screens/CreateStaffScreen';
+import EditStaffScreen from '@/features/users/screens/EditStaffScreen';
+
+// Profile screens (All users)
+import ProfileScreen from '@/features/profile/screens/ProfileScreen';
+import EditProfileScreen from '@/features/profile/screens/EditProfileScreen';
+import ChangePasswordScreen from '@/features/profile/screens/ChangePasswordScreen';
+
+// Customers screens (Admin & Staff)
+import CustomerListScreen from '@/features/customers/screens/CustomerListScreen';
+import CustomerDetailScreen from '@/features/customers/screens/CustomerDetailScreen';
+import CustomerFormScreen from '@/features/customers/screens/CustomerFormScreen';
 
 // ─── Param lists ────────────────────────────────────────────────
 export type AuthStackParamList = {
@@ -58,6 +69,13 @@ export type MainStackParamList = {
   StaffList: undefined;
   StaffDetail: { userId: string };
   CreateStaff: undefined;
+  EditStaff: { staffId: string };
+  Profile: undefined;
+  EditProfile: undefined;
+  ChangePassword: undefined;
+  CustomerList: undefined;
+  CustomerDetail: { customerId: string };
+  CustomerForm: { customerId?: string } | undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -82,6 +100,7 @@ function HomeScreen({ navigation }: any) {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const isAdmin = user?.role === 'admin';
+  const isStaffOrAdmin = user?.role === 'staff' || user?.role === 'admin';
 
   const handleLogout = async () => {
     try {
@@ -140,26 +159,47 @@ function HomeScreen({ navigation }: any) {
             <Text className="text-sm font-bold text-slate-700">Dịch vụ</Text>
           </Pressable>
 
-          {/* Users — Admin only */}
+          {/* Users & Customers — Admin only */}
           {isAdmin && (
-            <Pressable
-              onPress={() => navigation.navigate('StaffList')}
-              className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3.5"
-              style={({ pressed }) => [shadowOutline, pressedStyleSmall(pressed)]}
-            >
-              <UsersThree size={20} color={Colors.slate700} weight="bold" />
-              <Text className="text-sm font-bold text-slate-700">Nhân viên</Text>
-            </Pressable>
+            <>
+              <Pressable
+                onPress={() => navigation.navigate('CustomerList')}
+                className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3.5"
+                style={({ pressed }) => [shadowOutline, pressedStyleSmall(pressed)]}
+              >
+                <UsersThree size={20} color={Colors.slate700} weight="bold" />
+                <Text className="text-sm font-bold text-slate-700">Khách hàng</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => navigation.navigate('StaffList')}
+                className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3.5"
+                style={({ pressed }) => [shadowOutline, pressedStyleSmall(pressed)]}
+              >
+                <UsersThree size={20} color={Colors.slate700} weight="bold" />
+                <Text className="text-sm font-bold text-slate-700">Nhân viên</Text>
+              </Pressable>
+            </>
           )}
+
+          {/* Profile */}
+          <Pressable
+            onPress={() => navigation.navigate('Profile')}
+            className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3.5"
+            style={({ pressed }) => [shadowOutline, pressedStyleSmall(pressed)]}
+          >
+            <User size={20} color={Colors.slate700} weight="bold" />
+            <Text className="text-sm font-bold text-slate-700">Cá nhân</Text>
+          </Pressable>
 
           {/* Logout */}
           <Pressable
             onPress={handleLogout}
-            className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3.5"
+            className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-red-100 bg-red-50 px-6 py-3.5"
             style={({ pressed }) => [shadowOutline, pressedStyleSmall(pressed)]}
           >
-            <SignOut size={20} color={Colors.slate700} weight="bold" />
-            <Text className="text-sm font-bold text-slate-700">Đăng xuất</Text>
+            <SignOut size={20} color="#DC2626" weight="bold" />
+            <Text className="text-sm font-bold text-red-600">Đăng xuất</Text>
           </Pressable>
         </View>
       </View>
@@ -186,6 +226,10 @@ function AuthNavigator() {
 
 // ─── Main Navigator ─────────────────────────────────────────────
 function MainNavigator() {
+  const { user } = useAppSelector((state) => state.auth);
+  const isAdmin = user?.role === 'admin';
+  const isStaffOrAdmin = user?.role === 'staff' || user?.role === 'admin';
+
   return (
     <MainStack.Navigator
       screenOptions={{
@@ -194,16 +238,36 @@ function MainNavigator() {
         contentStyle: { backgroundColor: Colors.page },
       }}
     >
+      {/* Common Screens */}
       <MainStack.Screen name="Home" component={HomeScreen} />
       <MainStack.Screen name="OrderList" component={OrderListScreen} />
       <MainStack.Screen name="OrderDetail" component={OrderDetailScreen} />
-      <MainStack.Screen name="CreateOrder" component={CreateOrderScreen} />
+      <MainStack.Screen name="Profile" component={ProfileScreen} />
+      <MainStack.Screen name="EditProfile" component={EditProfileScreen} />
+      <MainStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <MainStack.Screen name="ServiceList" component={ServiceListScreen} />
       <MainStack.Screen name="ServiceDetail" component={ServiceDetailScreen} />
-      <MainStack.Screen name="ServiceForm" component={ServiceFormScreen} />
-      <MainStack.Screen name="StaffList" component={StaffListScreen} />
-      <MainStack.Screen name="StaffDetail" component={StaffDetailScreen} />
-      <MainStack.Screen name="CreateStaff" component={CreateStaffScreen} />
+
+      {/* Staff & Admin Only */}
+      {isStaffOrAdmin && (
+        <>
+          <MainStack.Screen name="CreateOrder" component={CreateOrderScreen} />
+          <MainStack.Screen name="ServiceForm" component={ServiceFormScreen} />
+        </>
+      )}
+
+      {/* Admin Only */}
+      {isAdmin && (
+        <>
+          <MainStack.Screen name="CustomerList" component={CustomerListScreen} />
+          <MainStack.Screen name="CustomerDetail" component={CustomerDetailScreen} />
+          <MainStack.Screen name="CustomerForm" component={CustomerFormScreen} />
+          <MainStack.Screen name="StaffList" component={StaffListScreen} />
+          <MainStack.Screen name="StaffDetail" component={StaffDetailScreen} />
+          <MainStack.Screen name="CreateStaff" component={CreateStaffScreen} />
+          <MainStack.Screen name="EditStaff" component={EditStaffScreen} />
+        </>
+      )}
     </MainStack.Navigator>
   );
 }

@@ -5,6 +5,7 @@ import type {
   AuthState,
   LoginPasswordPayload,
   SetPasswordPayload,
+  User,
 } from './types';
 
 // ─── Initial state ──────────────────────────────────────────────
@@ -119,6 +120,11 @@ const authSlice = createSlice({
     setPhone(state, action: PayloadAction<string>) {
       state.phone = action.payload;
     },
+    updateUser(state, action: PayloadAction<Partial<User>>) {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
   },
   extraReducers: (builder) => {
     // ── checkLogin ──
@@ -211,5 +217,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, resetAuth, setPhone } = authSlice.actions;
+export const { clearError, resetAuth, setPhone, updateUser } = authSlice.actions;
 export default authSlice.reducer;

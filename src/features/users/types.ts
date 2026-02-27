@@ -39,6 +39,13 @@ export interface CreateStaffPayload {
   email?: string;
 }
 
+/** Expected PUT /v1/users/users/:id */
+export interface UpdateStaffPayload {
+  name: string;
+  email?: string;
+  phone?: string;
+}
+
 // ─── Pagination ──────────────────────────────────────────────────
 
 export interface Pagination {

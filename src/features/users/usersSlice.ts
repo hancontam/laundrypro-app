@@ -12,6 +12,7 @@ import type {
   UsersState,
   FetchUsersParams,
   CreateStaffPayload,
+  UpdateStaffPayload,
   UserStatus,
 } from './types';
 
@@ -98,6 +99,24 @@ export const createStaffThunk = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(
         err.response?.data?.message || 'Không thể tạo nhân viên',
+      );
+    }
+  },
+);
+
+/** Update staff (Admin) - syncs selectedUser + list */
+export const updateStaffThunk = createAsyncThunk(
+  'users/updateStaff',
+  async (
+    { id, payload }: { id: string; payload: UpdateStaffPayload },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await usersService.updateStaff(id, payload);
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || 'Không thể cập nhật nhân viên',
       );
     }
   },
@@ -194,6 +213,24 @@ const usersSlice = createSlice({
         state.list.unshift(action.payload);
       })
       .addCase(createStaffThunk.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      });
+
+    // ── updateStaff (sync selectedUser + list) ──
+    builder
+      .addCase(updateStaffThunk.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateStaffThunk.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const updated = action.payload;
+        state.selectedUser = updated;
+        const idx = state.list.findIndex((u) => u._id === updated._id);
+        if (idx !== -1) state.list[idx] = updated;
+      })
+      .addCase(updateStaffThunk.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });

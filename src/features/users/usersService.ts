@@ -44,6 +44,18 @@ export async function createStaff(
   return data;
 }
 
+/** PUT /v1/users/users/:id — Update staff (Admin) */
+export async function updateStaff(
+  id: string,
+  payload: import('./types').UpdateStaffPayload,
+): Promise<UserMutationResponse> {
+  const { data } = await apiClient.put<UserMutationResponse>(
+    `/v1/users/users/${id}`,
+    payload,
+  );
+  return data;
+}
+
 /** PATCH /v1/users/users/:id/status — Update user status (Admin) */
 export async function updateUserStatus(
   id: string,
