@@ -3,11 +3,9 @@ import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ConfirmationResult } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SignOut, User, ClipboardText, Broom, UsersThree } from 'phosphor-react-native';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/services/firebase';
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { useAppSelector, useAppDispatch } from './store';
 import { logoutThunk } from '@/features/auth/authSlice';
 import {
@@ -54,7 +52,7 @@ import CustomerFormScreen from '@/features/customers/screens/CustomerFormScreen'
 // ─── Param lists ────────────────────────────────────────────────
 export type AuthStackParamList = {
   Login: undefined;
-  Otp: { phone: string; confirmation: ConfirmationResult };
+  Otp: { phone: string; confirmation: FirebaseAuthTypes.ConfirmationResult };
   SetPassword: undefined;
 };
 
@@ -104,8 +102,8 @@ function HomeScreen({ navigation }: any) {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
-    } catch (_) {}
+      await auth().signOut();
+    } catch (_) { }
     dispatch(logoutThunk());
   };
 

@@ -1,5 +1,5 @@
 // src/features/auth/screens/LoginScreen.tsx
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,10 +13,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Phone, ArrowRight, Eye, EyeSlash } from 'phosphor-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
-import { signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
-import { auth } from '@/services/firebase';
-import firebaseConfig from '@/services/firebase';
+
+// Use Native Firebase Auth
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
+
 import { useAppDispatch, useAppSelector } from '@/app/store';
 import {
   checkLoginThunk,
@@ -37,7 +37,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type AuthStackParamList = {
   Login: undefined;
-  Otp: { phone: string; confirmation: ConfirmationResult };
+  Otp: { phone: string; confirmation: FirebaseAuthTypes.ConfirmationResult };
   SetPassword: undefined;
 };
 
@@ -57,8 +57,6 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const dispatch = useAppDispatch();
   const { isLoading, error } = useAppSelector((state) => state.auth);
 
-  const recaptchaRef = useRef<FirebaseRecaptchaVerifierModal | null>(null);
-
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -67,17 +65,12 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   const isAnyLoading = isLoading || localLoading;
 
-  // ── Send Firebase OTP ──
+  // ── Send Firebase OTP (Native) ──
   const sendOtp = useCallback(
     async (phoneE164: string) => {
-      if (!recaptchaRef.current) return;
       setLocalLoading(true);
       try {
-        const confirmation = await signInWithPhoneNumber(
-          auth,
-          phoneE164,
-          recaptchaRef.current as any,
-        );
+        const confirmation = await auth().signInWithPhoneNumber(phoneE164);
         navigation.navigate('Otp', { phone: phoneE164, confirmation });
       } catch (err: any) {
         console.error('Send OTP error:', err.message);
@@ -129,11 +122,6 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   return (
     <SafeAreaView className="flex-1 bg-page">
-      <FirebaseRecaptchaVerifierModal
-        ref={recaptchaRef}
-        firebaseConfig={firebaseConfig}
-      />
-
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"

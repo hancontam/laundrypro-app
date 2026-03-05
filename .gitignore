@@ -43,4 +43,5 @@ yarn-error.*
 .agent/
 .shared/
 
-Checkpoint/
+checkpoint/
+context/

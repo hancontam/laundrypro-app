@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, ShieldCheck } from 'phosphor-react-native';
-import { ConfirmationResult } from 'firebase/auth';
+// Use Native Firebase Auth
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { useAppDispatch, useAppSelector } from '@/app/store';
 import { loginWithOtpThunk, getProfileThunk, clearError } from '../authSlice';
 import {
@@ -28,7 +29,7 @@ import type { RouteProp } from '@react-navigation/native';
 
 type AuthStackParamList = {
   Login: undefined;
-  Otp: { phone: string; confirmation: ConfirmationResult };
+  Otp: { phone: string; confirmation: FirebaseAuthTypes.ConfirmationResult };
   SetPassword: undefined;
 };
 
@@ -76,8 +77,12 @@ export default function OtpScreen({ navigation, route }: OtpScreenProps) {
       dispatch(clearError());
 
       try {
-        const result = await confirmation.confirm(code);
-        const idToken = await result.user.getIdToken();
+        await confirmation.confirm(code);
+        // Get the current user from auth() after confirmation succeeds
+        const user = auth().currentUser;
+        if (!user) throw new Error('Không thể lấy thông tin user xác thực.');
+
+        const idToken = await user.getIdToken();
 
         const loginResult = await dispatch(loginWithOtpThunk(idToken));
 
