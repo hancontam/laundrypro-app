@@ -61,6 +61,12 @@ import CustomerListScreen from "@/features/customers/screens/CustomerListScreen"
 import CustomerDetailScreen from "@/features/customers/screens/CustomerDetailScreen";
 import CustomerFormScreen from "@/features/customers/screens/CustomerFormScreen";
 
+// Dashboard screens (Admin only)
+import DashboardScreen from "@/features/dashboard/screens/DashboardScreen";
+
+// Contact Request List screen (Admin only)
+import ContactRequestListScreen from "@/features/contact/screens/ContactRequestListScreen";
+
 // ─── Param lists ────────────────────────────────────────────────
 export type AuthStackParamList = {
   GuestHome: undefined;
@@ -88,6 +94,8 @@ export type MainStackParamList = {
   CustomerList: undefined;
   CustomerDetail: { customerId: string };
   CustomerForm: { customerId?: string } | undefined;
+  Dashboard: undefined;
+  ContactRequestList: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -204,6 +212,20 @@ function HomeScreen({ navigation }: any) {
                   Nhân viên
                 </Text>
               </Pressable>
+
+              <Pressable
+                onPress={() => navigation.navigate("Dashboard")}
+                className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3.5"
+                style={({ pressed }) => [
+                  shadowOutline,
+                  pressedStyleSmall(pressed),
+                ]}
+              >
+                <Broom size={20} color={Colors.slate700} weight="bold" />
+                <Text className="text-sm font-bold text-slate-700">
+                  Dashboard
+                </Text>
+              </Pressable>
             </>
           )}
 
@@ -306,6 +328,11 @@ function MainNavigator() {
           <MainStack.Screen name="StaffDetail" component={StaffDetailScreen} />
           <MainStack.Screen name="CreateStaff" component={CreateStaffScreen} />
           <MainStack.Screen name="EditStaff" component={EditStaffScreen} />
+          <MainStack.Screen name="Dashboard" component={DashboardScreen} />
+          <MainStack.Screen
+            name="ContactRequestList"
+            component={ContactRequestListScreen}
+          />
         </>
       )}
     </MainStack.Navigator>

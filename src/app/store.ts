@@ -1,12 +1,13 @@
 // src/app/store.ts
-import { configureStore } from '@reduxjs/toolkit';
-import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
-import authReducer from '@/features/auth/authSlice';
-import ordersReducer from '@/features/orders/ordersSlice';
-import servicesReducer from '@/features/services/servicesSlice';
-import usersReducer from '@/features/users/usersSlice';
-import customersReducer from '@/features/customers/customersSlice';
-import profileReducer from '@/features/profile/profileSlice';
+import { configureStore } from "@reduxjs/toolkit";
+import { useDispatch, useSelector, TypedUseSelectorHook } from "react-redux";
+import authReducer from "@/features/auth/authSlice";
+import ordersReducer from "@/features/orders/ordersSlice";
+import servicesReducer from "@/features/services/servicesSlice";
+import usersReducer from "@/features/users/usersSlice";
+import customersReducer from "@/features/customers/customersSlice";
+import profileReducer from "@/features/profile/profileSlice";
+import contactReducer from "@/features/contact/contactSlice";
 
 export const store = configureStore({
   reducer: {
@@ -16,11 +17,15 @@ export const store = configureStore({
     users: usersReducer,
     customers: customersReducer,
     profile: profileReducer,
+    contact: contactReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['auth/loginWithOtp/fulfilled', 'auth/loginWithPassword/fulfilled'],
+        ignoredActions: [
+          "auth/loginWithOtp/fulfilled",
+          "auth/loginWithPassword/fulfilled",
+        ],
       },
     }),
 });

@@ -1,12 +1,12 @@
 // src/features/auth/authSlice.ts
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import * as authService from './authService';
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import * as authService from "./authService";
 import type {
   AuthState,
   LoginPasswordPayload,
   SetPasswordPayload,
   User,
-} from './types';
+} from "./types";
 
 // ─── Initial state ──────────────────────────────────────────────
 const initialState: AuthState = {
@@ -24,14 +24,16 @@ const initialState: AuthState = {
 
 // Step 1: Check how a phone number should login
 export const checkLoginThunk = createAsyncThunk(
-  'auth/checkLogin',
+  "auth/checkLogin",
   async (phone: string, { rejectWithValue }) => {
     try {
       const result = await authService.checkLogin(phone);
       return { ...result, phone };
     } catch (error: any) {
       const msg =
-        error.response?.data?.message || error.message || 'Failed to check login';
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to check login";
       return rejectWithValue(msg);
     }
   },
@@ -39,13 +41,13 @@ export const checkLoginThunk = createAsyncThunk(
 
 // Step 2a: Login with Firebase OTP idToken (sets cookies)
 export const loginWithOtpThunk = createAsyncThunk(
-  'auth/loginWithOtp',
+  "auth/loginWithOtp",
   async (idToken: string, { rejectWithValue }) => {
     try {
       await authService.loginWithOtp(idToken);
     } catch (error: any) {
       const msg =
-        error.response?.data?.message || error.message || 'OTP login failed';
+        error.response?.data?.message || error.message || "OTP login failed";
       return rejectWithValue(msg);
     }
   },
@@ -53,13 +55,13 @@ export const loginWithOtpThunk = createAsyncThunk(
 
 // Step 2b: Login with phone + password (sets cookies)
 export const loginWithPasswordThunk = createAsyncThunk(
-  'auth/loginWithPassword',
+  "auth/loginWithPassword",
   async (payload: LoginPasswordPayload, { rejectWithValue }) => {
     try {
       await authService.loginWithPassword(payload);
     } catch (error: any) {
       const msg =
-        error.response?.data?.message || error.message || 'Login failed';
+        error.response?.data?.message || error.message || "Login failed";
       return rejectWithValue(msg);
     }
   },
@@ -67,40 +69,44 @@ export const loginWithPasswordThunk = createAsyncThunk(
 
 // Step 3: Load profile after login
 export const getProfileThunk = createAsyncThunk(
-  'auth/getProfile',
+  "auth/getProfile",
   async (_, { rejectWithValue }) => {
     try {
       return await authService.getProfile();
     } catch (error: any) {
       const msg =
-        error.response?.data?.message || error.message || 'Failed to get profile';
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to get profile";
       return rejectWithValue(msg);
     }
   },
 );
 
 export const setPasswordThunk = createAsyncThunk(
-  'auth/setPassword',
+  "auth/setPassword",
   async (payload: SetPasswordPayload, { rejectWithValue }) => {
     try {
       await authService.setPassword(payload);
     } catch (error: any) {
       const msg =
-        error.response?.data?.message || error.message || 'Failed to set password';
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to set password";
       return rejectWithValue(msg);
     }
   },
 );
 
 export const logoutThunk = createAsyncThunk(
-  'auth/logout',
+  "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
       await authService.logout();
     } catch (error: any) {
       // Still reset state even if server logout fails
       const msg =
-        error.response?.data?.message || error.message || 'Logout failed';
+        error.response?.data?.message || error.message || "Logout failed";
       return rejectWithValue(msg);
     }
   },
@@ -108,7 +114,7 @@ export const logoutThunk = createAsyncThunk(
 
 // ─── Slice ──────────────────────────────────────────────────────
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
     clearError(state) {
@@ -217,5 +223,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, resetAuth, setPhone, updateUser } = authSlice.actions;
+export const { clearError, resetAuth, setPhone, updateUser } =
+  authSlice.actions;
 export default authSlice.reducer;

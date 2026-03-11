@@ -22,11 +22,9 @@ export async function getContacts(
   page: number = 1,
   limit: number = 10,
 ): Promise<ContactPaginationResponse> {
-  const { data } = await apiClient.get<ContactPaginationResponse>(
-    CONTACT_BASE,
-    {
-      params: { page, limit },
-    },
-  );
-  return data;
+  const { data } = await apiClient.get<any>(`${CONTACT_BASE}/admin`, {
+    params: { page, limit },
+  });
+  // data is wrapped in { success: true, data: { contacts, pagination } }
+  return data.data;
 }
