@@ -1,8 +1,8 @@
 // App.tsx
-import './global.css';
-import React, { useCallback } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator } from 'react-native';
+import "./global.css";
+import React, { useCallback } from "react";
+import { StatusBar } from "expo-status-bar";
+import { View, ActivityIndicator } from "react-native";
 import {
   useFonts,
   PlusJakartaSans_400Regular,
@@ -10,22 +10,23 @@ import {
   PlusJakartaSans_600SemiBold,
   PlusJakartaSans_700Bold,
   PlusJakartaSans_800ExtraBold,
-} from '@expo-google-fonts/plus-jakarta-sans';
-import * as SplashScreen from 'expo-splash-screen';
-import { Provider } from 'react-redux';
-import { store } from '@/app/store';
-import AppNavigator from '@/app/navigation';
+} from "@expo-google-fonts/plus-jakarta-sans";
+import * as SplashScreen from "expo-splash-screen";
+import { Provider } from "react-redux";
+import { store } from "@/app/store";
+import AppNavigator from "@/app/navigation";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // Prevent auto-hiding splash screen
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
-    'PlusJakartaSans-Regular': PlusJakartaSans_400Regular,
-    'PlusJakartaSans-Medium': PlusJakartaSans_500Medium,
-    'PlusJakartaSans-SemiBold': PlusJakartaSans_600SemiBold,
-    'PlusJakartaSans-Bold': PlusJakartaSans_700Bold,
-    'PlusJakartaSans-ExtraBold': PlusJakartaSans_800ExtraBold,
+    "PlusJakartaSans-Regular": PlusJakartaSans_400Regular,
+    "PlusJakartaSans-Medium": PlusJakartaSans_500Medium,
+    "PlusJakartaSans-SemiBold": PlusJakartaSans_600SemiBold,
+    "PlusJakartaSans-Bold": PlusJakartaSans_700Bold,
+    "PlusJakartaSans-ExtraBold": PlusJakartaSans_800ExtraBold,
   });
 
   const onLayoutRootView = useCallback(async () => {
@@ -39,9 +40,9 @@ export default function App() {
       <View
         style={{
           flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#F8F9FB',
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#F8F9FB",
         }}
       >
         <ActivityIndicator size="large" color="#4F46E5" />
@@ -51,10 +52,12 @@ export default function App() {
 
   return (
     <Provider store={store}>
-      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-        <StatusBar style="dark" />
-        <AppNavigator />
-      </View>
+      <SafeAreaProvider>
+        <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+          <StatusBar style="dark" />
+          <AppNavigator />
+        </View>
+      </SafeAreaProvider>
     </Provider>
   );
 }

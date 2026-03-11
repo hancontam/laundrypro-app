@@ -3,7 +3,7 @@
 // POST/PUT use multipart/form-data (supports image upload).
 // No 410 handling — apiClient interceptor handles token refresh.
 
-import apiClient from '@/services/apiClient';
+import apiClient from "../../core/api/apiClient";
 import type {
   FetchServicesParams,
   ServicesListResponse,
@@ -12,7 +12,7 @@ import type {
   CategoriesResponse,
   CreateServicePayload,
   UpdateServicePayload,
-} from './types';
+} from "./types";
 
 // ─── Public endpoints ────────────────────────────────────────────
 
@@ -20,7 +20,7 @@ import type {
 export async function getServices(
   params: FetchServicesParams = {},
 ): Promise<ServicesListResponse> {
-  const { data } = await apiClient.get<ServicesListResponse>('/v1/services', {
+  const { data } = await apiClient.get<ServicesListResponse>("/v1/services", {
     params,
   });
   return data;
@@ -29,7 +29,7 @@ export async function getServices(
 /** GET /v1/services/categories — Public */
 export async function getCategories(): Promise<CategoriesResponse> {
   const { data } = await apiClient.get<CategoriesResponse>(
-    '/v1/services/categories',
+    "/v1/services/categories",
   );
   return data;
 }
@@ -52,9 +52,9 @@ export async function createService(
 ): Promise<ServiceMutationResponse> {
   const formData = buildFormData(payload);
   const { data } = await apiClient.post<ServiceMutationResponse>(
-    '/v1/services',
+    "/v1/services",
     formData,
-    { headers: { 'Content-Type': 'multipart/form-data' } },
+    { headers: { "Content-Type": "multipart/form-data" } },
   );
   return data;
 }
@@ -68,7 +68,7 @@ export async function updateService(
   const { data } = await apiClient.put<ServiceMutationResponse>(
     `/v1/services/${id}`,
     formData,
-    { headers: { 'Content-Type': 'multipart/form-data' } },
+    { headers: { "Content-Type": "multipart/form-data" } },
   );
   return data;
 }
@@ -87,9 +87,9 @@ function buildFormData(payload: Record<string, any>): FormData {
   const fd = new FormData();
   for (const [key, value] of Object.entries(payload)) {
     if (value === undefined || value === null) continue;
-    if (key === 'image' && typeof value === 'object' && value.uri) {
+    if (key === "image" && typeof value === "object" && value.uri) {
       // React Native file object: { uri, type, name }
-      fd.append('image', value as any);
+      fd.append("image", value as any);
     } else {
       fd.append(key, String(value));
     }

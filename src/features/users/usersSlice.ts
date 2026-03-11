@@ -5,16 +5,16 @@
 // - Reset on logout
 // - NO 410 handling — apiClient interceptor
 
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { logoutThunk } from '@/features/auth/authSlice';
-import * as usersService from './usersService';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { logoutThunk } from "@/features/auth/authSlice";
+import * as usersService from "./usersService";
 import type {
   UsersState,
   FetchUsersParams,
   CreateStaffPayload,
   UpdateStaffPayload,
   UserStatus,
-} from './types';
+} from "./types";
 
 // ─── Initial state ───────────────────────────────────────────────
 
@@ -31,11 +31,11 @@ const initialState: UsersState = {
 
 /** Fetch staff list (page 1) — filter role=staff */
 export const fetchStaffThunk = createAsyncThunk(
-  'users/fetchStaff',
+  "users/fetchStaff",
   async (params: FetchUsersParams | undefined, { rejectWithValue }) => {
     try {
       const response = await usersService.getUsers({
-        role: 'staff',
+        role: "staff",
         page: 1,
         limit: 10,
         ...params,
@@ -43,7 +43,7 @@ export const fetchStaffThunk = createAsyncThunk(
       return response.data;
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.message || 'Không thể tải danh sách nhân viên',
+        err.response?.data?.message || "Không thể tải danh sách nhân viên",
       );
     }
   },
@@ -51,8 +51,11 @@ export const fetchStaffThunk = createAsyncThunk(
 
 /** Load more staff */
 export const loadMoreStaffThunk = createAsyncThunk(
-  'users/loadMoreStaff',
-  async (params: FetchUsersParams | undefined, { getState, rejectWithValue }) => {
+  "users/loadMoreStaff",
+  async (
+    params: FetchUsersParams | undefined,
+    { getState, rejectWithValue },
+  ) => {
     try {
       const state = (getState() as any).users as UsersState;
       const { page, totalPages } = state.pagination;
@@ -60,7 +63,7 @@ export const loadMoreStaffThunk = createAsyncThunk(
       if (page >= totalPages) return null;
 
       const response = await usersService.getUsers({
-        role: 'staff',
+        role: "staff",
         page: page + 1,
         limit: 10,
         ...params,
@@ -68,7 +71,7 @@ export const loadMoreStaffThunk = createAsyncThunk(
       return response.data;
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.message || 'Không thể tải thêm nhân viên',
+        err.response?.data?.message || "Không thể tải thêm nhân viên",
       );
     }
   },
@@ -76,14 +79,14 @@ export const loadMoreStaffThunk = createAsyncThunk(
 
 /** Fetch user by ID */
 export const fetchUserByIdThunk = createAsyncThunk(
-  'users/fetchUserById',
+  "users/fetchUserById",
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await usersService.getUserById(id);
       return response.data;
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.message || 'Không thể tải thông tin nhân viên',
+        err.response?.data?.message || "Không thể tải thông tin nhân viên",
       );
     }
   },
@@ -91,14 +94,14 @@ export const fetchUserByIdThunk = createAsyncThunk(
 
 /** Create staff (Admin) */
 export const createStaffThunk = createAsyncThunk(
-  'users/createStaff',
+  "users/createStaff",
   async (payload: CreateStaffPayload, { rejectWithValue }) => {
     try {
       const response = await usersService.createStaff(payload);
       return response.data;
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.message || 'Không thể tạo nhân viên',
+        err.response?.data?.message || "Không thể tạo nhân viên",
       );
     }
   },
@@ -106,7 +109,7 @@ export const createStaffThunk = createAsyncThunk(
 
 /** Update staff (Admin) - syncs selectedUser + list */
 export const updateStaffThunk = createAsyncThunk(
-  'users/updateStaff',
+  "users/updateStaff",
   async (
     { id, payload }: { id: string; payload: UpdateStaffPayload },
     { rejectWithValue },
@@ -116,7 +119,7 @@ export const updateStaffThunk = createAsyncThunk(
       return response.data;
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.message || 'Không thể cập nhật nhân viên',
+        err.response?.data?.message || "Không thể cập nhật nhân viên",
       );
     }
   },
@@ -124,7 +127,7 @@ export const updateStaffThunk = createAsyncThunk(
 
 /** Update user status (Admin) — syncs selectedUser + list */
 export const updateUserStatusThunk = createAsyncThunk(
-  'users/updateUserStatus',
+  "users/updateUserStatus",
   async (
     { id, status }: { id: string; status: UserStatus },
     { rejectWithValue },
@@ -134,7 +137,7 @@ export const updateUserStatusThunk = createAsyncThunk(
       return response.data;
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.message || 'Không thể cập nhật trạng thái',
+        err.response?.data?.message || "Không thể cập nhật trạng thái",
       );
     }
   },
@@ -143,7 +146,7 @@ export const updateUserStatusThunk = createAsyncThunk(
 // ─── Slice ───────────────────────────────────────────────────────
 
 const usersSlice = createSlice({
-  name: 'users',
+  name: "users",
   initialState,
   reducers: {
     clearUserError(state) {

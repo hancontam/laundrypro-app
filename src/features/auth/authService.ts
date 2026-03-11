@@ -1,14 +1,14 @@
 // src/features/auth/authService.ts
-import apiClient from '@/services/apiClient';
+import apiClient from "../../core/api/apiClient";
 import type {
   ApiSuccessResponse,
   CheckLoginData,
   LoginPasswordPayload,
   SetPasswordPayload,
   User,
-} from './types';
+} from "./types";
 
-const AUTH_BASE = '/v1/users';
+const AUTH_BASE = "/v1/users";
 
 /**
  * POST /v1/users/check-login
@@ -37,7 +37,9 @@ export async function loginWithOtp(idToken: string): Promise<void> {
  * Login with phone + password.
  * Sets auth cookies on the response.
  */
-export async function loginWithPassword(payload: LoginPasswordPayload): Promise<void> {
+export async function loginWithPassword(
+  payload: LoginPasswordPayload,
+): Promise<void> {
   await apiClient.post(`${AUTH_BASE}/login/password`, payload);
 }
 

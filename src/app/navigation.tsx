@@ -1,13 +1,19 @@
 // src/app/navigation.tsx
-import React from 'react';
-import { View, Text, Pressable } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { SignOut, User, ClipboardText, Broom, UsersThree } from 'phosphor-react-native';
-import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import { useAppSelector, useAppDispatch } from './store';
-import { logoutThunk } from '@/features/auth/authSlice';
+import React from "react";
+import { View, Text, Pressable } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SignOut,
+  User,
+  ClipboardText,
+  Broom,
+  UsersThree,
+} from "phosphor-react-native";
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { useAppSelector, useAppDispatch } from "./store";
+import { logoutThunk } from "@/features/auth/authSlice";
 import {
   Colors,
   shadowCard,
@@ -16,41 +22,49 @@ import {
   pressedStyleSmall,
   layoutContainer,
   labelStyle,
-} from '@/theme/tokens';
+} from "@/theme/tokens";
 
 // Auth screens
-import LoginScreen from '@/features/auth/screens/LoginScreen';
-import OtpScreen from '@/features/auth/screens/OtpScreen';
-import SetPasswordScreen from '@/features/auth/screens/SetPasswordScreen';
+import LoginScreen from "@/features/auth/screens/LoginScreen";
+import OtpScreen from "@/features/auth/screens/OtpScreen";
+import SetPasswordScreen from "@/features/auth/screens/SetPasswordScreen";
+
+// Guest screens
+import GuestHomeScreen from "@/features/guest/screens/GuestHomeScreen";
+
+// Contact screens
+import ContactUsScreen from "@/features/contact/screens/ContactUsScreen";
 
 // Orders screens
-import OrderListScreen from '@/features/orders/screens/OrderListScreen';
-import OrderDetailScreen from '@/features/orders/screens/OrderDetailScreen';
-import CreateOrderScreen from '@/features/orders/screens/CreateOrderScreen';
+import OrderListScreen from "@/features/orders/screens/OrderListScreen";
+import OrderDetailScreen from "@/features/orders/screens/OrderDetailScreen";
+import CreateOrderScreen from "@/features/orders/screens/CreateOrderScreen";
 
 // Services screens
-import ServiceListScreen from '@/features/services/screens/ServiceListScreen';
-import ServiceDetailScreen from '@/features/services/screens/ServiceDetailScreen';
-import ServiceFormScreen from '@/features/services/screens/ServiceFormScreen';
+import ServiceListScreen from "@/features/services/screens/ServiceListScreen";
+import ServiceDetailScreen from "@/features/services/screens/ServiceDetailScreen";
+import ServiceFormScreen from "@/features/services/screens/ServiceFormScreen";
 
 // Users screens (Admin only)
-import StaffListScreen from '@/features/users/screens/StaffListScreen';
-import StaffDetailScreen from '@/features/users/screens/StaffDetailScreen';
-import CreateStaffScreen from '@/features/users/screens/CreateStaffScreen';
-import EditStaffScreen from '@/features/users/screens/EditStaffScreen';
+import StaffListScreen from "@/features/users/screens/StaffListScreen";
+import StaffDetailScreen from "@/features/users/screens/StaffDetailScreen";
+import CreateStaffScreen from "@/features/users/screens/CreateStaffScreen";
+import EditStaffScreen from "@/features/users/screens/EditStaffScreen";
 
 // Profile screens (All users)
-import ProfileScreen from '@/features/profile/screens/ProfileScreen';
-import EditProfileScreen from '@/features/profile/screens/EditProfileScreen';
-import ChangePasswordScreen from '@/features/profile/screens/ChangePasswordScreen';
+import ProfileScreen from "@/features/profile/screens/ProfileScreen";
+import EditProfileScreen from "@/features/profile/screens/EditProfileScreen";
+import ChangePasswordScreen from "@/features/profile/screens/ChangePasswordScreen";
 
 // Customers screens (Admin & Staff)
-import CustomerListScreen from '@/features/customers/screens/CustomerListScreen';
-import CustomerDetailScreen from '@/features/customers/screens/CustomerDetailScreen';
-import CustomerFormScreen from '@/features/customers/screens/CustomerFormScreen';
+import CustomerListScreen from "@/features/customers/screens/CustomerListScreen";
+import CustomerDetailScreen from "@/features/customers/screens/CustomerDetailScreen";
+import CustomerFormScreen from "@/features/customers/screens/CustomerFormScreen";
 
 // ─── Param lists ────────────────────────────────────────────────
 export type AuthStackParamList = {
+  GuestHome: undefined;
+  ContactUs: undefined;
   Login: undefined;
   Otp: { phone: string; confirmation: FirebaseAuthTypes.ConfirmationResult };
   SetPassword: undefined;
@@ -97,19 +111,22 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 function HomeScreen({ navigation }: any) {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const isAdmin = user?.role === 'admin';
-  const isStaffOrAdmin = user?.role === 'staff' || user?.role === 'admin';
+  const isAdmin = user?.role === "admin";
+  const isStaffOrAdmin = user?.role === "staff" || user?.role === "admin";
 
   const handleLogout = async () => {
     try {
       await auth().signOut();
-    } catch (_) { }
+    } catch (_) {}
     dispatch(logoutThunk());
   };
 
   return (
     <SafeAreaView className="flex-1 bg-page">
-      <View className="flex-1 items-center justify-center px-6" style={layoutContainer}>
+      <View
+        className="flex-1 items-center justify-center px-6"
+        style={layoutContainer}
+      >
         {/* §5.1 Card with shadow-sm + rounded-2xl */}
         <View
           className="mb-6 w-full rounded-2xl border border-slate-100 bg-white p-6"
@@ -120,18 +137,18 @@ function HomeScreen({ navigation }: any) {
               <User size={32} color={Colors.indigo600} weight="bold" />
             </View>
             <Text className="text-lg font-extrabold text-slate-900">
-              {user?.name || 'Chưa cập nhật tên'}
+              {user?.name || "Chưa cập nhật tên"}
             </Text>
             <Text className="mt-1 text-sm font-medium text-slate-500">
               {user?.phone}
             </Text>
           </View>
 
-          <InfoRow label="VAI TRÒ" value={user?.role || '—'} />
-          <InfoRow label="TRẠNG THÁI" value={user?.status || '—'} />
+          <InfoRow label="VAI TRÒ" value={user?.role || "—"} />
+          <InfoRow label="TRẠNG THÁI" value={user?.status || "—"} />
           <InfoRow
             label="XÁC THỰC"
-            value={user?.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}
+            value={user?.isVerified ? "Đã xác thực" : "Chưa xác thực"}
           />
         </View>
 
@@ -139,7 +156,7 @@ function HomeScreen({ navigation }: any) {
         <View className="w-full gap-3">
           {/* Orders */}
           <Pressable
-            onPress={() => navigation.navigate('OrderList')}
+            onPress={() => navigation.navigate("OrderList")}
             className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3.5"
             style={({ pressed }) => [shadowOutline, pressedStyleSmall(pressed)]}
           >
@@ -149,7 +166,7 @@ function HomeScreen({ navigation }: any) {
 
           {/* Services */}
           <Pressable
-            onPress={() => navigation.navigate('ServiceList')}
+            onPress={() => navigation.navigate("ServiceList")}
             className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3.5"
             style={({ pressed }) => [shadowOutline, pressedStyleSmall(pressed)]}
           >
@@ -161,28 +178,38 @@ function HomeScreen({ navigation }: any) {
           {isAdmin && (
             <>
               <Pressable
-                onPress={() => navigation.navigate('CustomerList')}
+                onPress={() => navigation.navigate("CustomerList")}
                 className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3.5"
-                style={({ pressed }) => [shadowOutline, pressedStyleSmall(pressed)]}
+                style={({ pressed }) => [
+                  shadowOutline,
+                  pressedStyleSmall(pressed),
+                ]}
               >
                 <UsersThree size={20} color={Colors.slate700} weight="bold" />
-                <Text className="text-sm font-bold text-slate-700">Khách hàng</Text>
+                <Text className="text-sm font-bold text-slate-700">
+                  Khách hàng
+                </Text>
               </Pressable>
 
               <Pressable
-                onPress={() => navigation.navigate('StaffList')}
+                onPress={() => navigation.navigate("StaffList")}
                 className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3.5"
-                style={({ pressed }) => [shadowOutline, pressedStyleSmall(pressed)]}
+                style={({ pressed }) => [
+                  shadowOutline,
+                  pressedStyleSmall(pressed),
+                ]}
               >
                 <UsersThree size={20} color={Colors.slate700} weight="bold" />
-                <Text className="text-sm font-bold text-slate-700">Nhân viên</Text>
+                <Text className="text-sm font-bold text-slate-700">
+                  Nhân viên
+                </Text>
               </Pressable>
             </>
           )}
 
           {/* Profile */}
           <Pressable
-            onPress={() => navigation.navigate('Profile')}
+            onPress={() => navigation.navigate("Profile")}
             className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3.5"
             style={({ pressed }) => [shadowOutline, pressedStyleSmall(pressed)]}
           >
@@ -209,12 +236,15 @@ function HomeScreen({ navigation }: any) {
 function AuthNavigator() {
   return (
     <AuthStack.Navigator
+      initialRouteName="GuestHome"
       screenOptions={{
         headerShown: false,
-        animation: 'slide_from_right',
+        animation: "slide_from_right",
         contentStyle: { backgroundColor: Colors.page },
       }}
     >
+      <AuthStack.Screen name="GuestHome" component={GuestHomeScreen} />
+      <AuthStack.Screen name="ContactUs" component={ContactUsScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Otp" component={OtpScreen} />
       <AuthStack.Screen name="SetPassword" component={SetPasswordScreen} />
@@ -225,14 +255,14 @@ function AuthNavigator() {
 // ─── Main Navigator ─────────────────────────────────────────────
 function MainNavigator() {
   const { user } = useAppSelector((state) => state.auth);
-  const isAdmin = user?.role === 'admin';
-  const isStaffOrAdmin = user?.role === 'staff' || user?.role === 'admin';
+  const isAdmin = user?.role === "admin";
+  const isStaffOrAdmin = user?.role === "staff" || user?.role === "admin";
 
   return (
     <MainStack.Navigator
       screenOptions={{
         headerShown: false,
-        animation: 'slide_from_right',
+        animation: "slide_from_right",
         contentStyle: { backgroundColor: Colors.page },
       }}
     >
@@ -242,7 +272,10 @@ function MainNavigator() {
       <MainStack.Screen name="OrderDetail" component={OrderDetailScreen} />
       <MainStack.Screen name="Profile" component={ProfileScreen} />
       <MainStack.Screen name="EditProfile" component={EditProfileScreen} />
-      <MainStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+      <MainStack.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
+      />
       <MainStack.Screen name="ServiceList" component={ServiceListScreen} />
       <MainStack.Screen name="ServiceDetail" component={ServiceDetailScreen} />
 
@@ -257,9 +290,18 @@ function MainNavigator() {
       {/* Admin Only */}
       {isAdmin && (
         <>
-          <MainStack.Screen name="CustomerList" component={CustomerListScreen} />
-          <MainStack.Screen name="CustomerDetail" component={CustomerDetailScreen} />
-          <MainStack.Screen name="CustomerForm" component={CustomerFormScreen} />
+          <MainStack.Screen
+            name="CustomerList"
+            component={CustomerListScreen}
+          />
+          <MainStack.Screen
+            name="CustomerDetail"
+            component={CustomerDetailScreen}
+          />
+          <MainStack.Screen
+            name="CustomerForm"
+            component={CustomerFormScreen}
+          />
           <MainStack.Screen name="StaffList" component={StaffListScreen} />
           <MainStack.Screen name="StaffDetail" component={StaffDetailScreen} />
           <MainStack.Screen name="CreateStaff" component={CreateStaffScreen} />

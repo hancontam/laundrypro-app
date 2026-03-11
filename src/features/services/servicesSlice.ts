@@ -5,15 +5,15 @@
 // - Reset on logout
 // - NO 410 handling — apiClient interceptor handles token refresh
 
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { logoutThunk } from '@/features/auth/authSlice';
-import * as servicesService from './servicesService';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { logoutThunk } from "@/features/auth/authSlice";
+import * as servicesService from "./servicesService";
 import type {
   ServicesState,
   FetchServicesParams,
   CreateServicePayload,
   UpdateServicePayload,
-} from './types';
+} from "./types";
 
 // ─── Initial state ───────────────────────────────────────────────
 
@@ -29,14 +29,14 @@ const initialState: ServicesState = {
 
 /** Fetch all services (public, filterable) */
 export const fetchServicesThunk = createAsyncThunk(
-  'services/fetchServices',
+  "services/fetchServices",
   async (params: FetchServicesParams | undefined, { rejectWithValue }) => {
     try {
       const response = await servicesService.getServices(params || {});
       return response.data;
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.message || 'Không thể tải danh sách dịch vụ',
+        err.response?.data?.message || "Không thể tải danh sách dịch vụ",
       );
     }
   },
@@ -44,14 +44,14 @@ export const fetchServicesThunk = createAsyncThunk(
 
 /** Fetch categories (public) */
 export const fetchCategoriesThunk = createAsyncThunk(
-  'services/fetchCategories',
+  "services/fetchCategories",
   async (_, { rejectWithValue }) => {
     try {
       const response = await servicesService.getCategories();
       return response.data;
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.message || 'Không thể tải danh mục',
+        err.response?.data?.message || "Không thể tải danh mục",
       );
     }
   },
@@ -59,14 +59,14 @@ export const fetchCategoriesThunk = createAsyncThunk(
 
 /** Fetch single service by ID */
 export const fetchServiceByIdThunk = createAsyncThunk(
-  'services/fetchServiceById',
+  "services/fetchServiceById",
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await servicesService.getServiceById(id);
       return response.data;
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.message || 'Không thể tải dịch vụ',
+        err.response?.data?.message || "Không thể tải dịch vụ",
       );
     }
   },
@@ -74,14 +74,14 @@ export const fetchServiceByIdThunk = createAsyncThunk(
 
 /** Create service (Admin) */
 export const createServiceThunk = createAsyncThunk(
-  'services/createService',
+  "services/createService",
   async (payload: CreateServicePayload, { rejectWithValue }) => {
     try {
       const response = await servicesService.createService(payload);
       return response.data;
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.message || 'Không thể tạo dịch vụ',
+        err.response?.data?.message || "Không thể tạo dịch vụ",
       );
     }
   },
@@ -89,7 +89,7 @@ export const createServiceThunk = createAsyncThunk(
 
 /** Update service (Admin) */
 export const updateServiceThunk = createAsyncThunk(
-  'services/updateService',
+  "services/updateService",
   async (
     { id, payload }: { id: string; payload: UpdateServicePayload },
     { rejectWithValue },
@@ -99,7 +99,7 @@ export const updateServiceThunk = createAsyncThunk(
       return response.data;
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.message || 'Không thể cập nhật dịch vụ',
+        err.response?.data?.message || "Không thể cập nhật dịch vụ",
       );
     }
   },
@@ -107,14 +107,14 @@ export const updateServiceThunk = createAsyncThunk(
 
 /** Delete service (Admin) */
 export const deleteServiceThunk = createAsyncThunk(
-  'services/deleteService',
+  "services/deleteService",
   async (id: string, { rejectWithValue }) => {
     try {
       await servicesService.deleteService(id);
       return id; // Return ID to remove from list
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.message || 'Không thể xoá dịch vụ',
+        err.response?.data?.message || "Không thể xoá dịch vụ",
       );
     }
   },
@@ -123,7 +123,7 @@ export const deleteServiceThunk = createAsyncThunk(
 // ─── Slice ───────────────────────────────────────────────────────
 
 const servicesSlice = createSlice({
-  name: 'services',
+  name: "services",
   initialState,
   reducers: {
     clearServiceError(state) {
@@ -153,10 +153,9 @@ const servicesSlice = createSlice({
       });
 
     // ── fetchCategories ──
-    builder
-      .addCase(fetchCategoriesThunk.fulfilled, (state, action) => {
-        state.categories = action.payload;
-      });
+    builder.addCase(fetchCategoriesThunk.fulfilled, (state, action) => {
+      state.categories = action.payload;
+    });
 
     // ── fetchServiceById ──
     builder

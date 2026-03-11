@@ -2,7 +2,7 @@
 // ─── API service layer for Users (Admin only) ────────────────────
 // No 410 handling — apiClient interceptor handles token refresh.
 
-import apiClient from '@/services/apiClient';
+import apiClient from "../../core/api/apiClient";
 import type {
   FetchUsersParams,
   UsersListResponse,
@@ -10,23 +10,20 @@ import type {
   UserMutationResponse,
   CreateStaffPayload,
   UserStatus,
-} from './types';
+} from "./types";
 
 /** GET /v1/users/users — All users (Admin, paginated) */
 export async function getUsers(
   params: FetchUsersParams = {},
 ): Promise<UsersListResponse> {
-  const { data } = await apiClient.get<UsersListResponse>(
-    '/v1/users/users',
-    { params },
-  );
+  const { data } = await apiClient.get<UsersListResponse>("/v1/users/users", {
+    params,
+  });
   return data;
 }
 
 /** GET /v1/users/users/:id — User detail (Admin) */
-export async function getUserById(
-  id: string,
-): Promise<UserDetailResponse> {
+export async function getUserById(id: string): Promise<UserDetailResponse> {
   const { data } = await apiClient.get<UserDetailResponse>(
     `/v1/users/users/${id}`,
   );
@@ -38,7 +35,7 @@ export async function createStaff(
   payload: CreateStaffPayload,
 ): Promise<UserMutationResponse> {
   const { data } = await apiClient.post<UserMutationResponse>(
-    '/v1/users/users/staff',
+    "/v1/users/users/staff",
     payload,
   );
   return data;
@@ -47,7 +44,7 @@ export async function createStaff(
 /** PUT /v1/users/users/:id — Update staff (Admin) */
 export async function updateStaff(
   id: string,
-  payload: import('./types').UpdateStaffPayload,
+  payload: import("./types").UpdateStaffPayload,
 ): Promise<UserMutationResponse> {
   const { data } = await apiClient.put<UserMutationResponse>(
     `/v1/users/users/${id}`,

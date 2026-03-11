@@ -1,13 +1,13 @@
 // src/services/apiClient.ts
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-const BASE_URL = 'https://laundrypro-api.onrender.com';
+const BASE_URL = "https://laundrypro-api.onrender.com";
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   // Enable cookie handling for React Native
   withCredentials: true,
@@ -20,7 +20,9 @@ const apiClient = axios.create({
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
     // On 410 (token expired), try to refresh
     if (error.response?.status === 410 && !originalRequest._retry) {
