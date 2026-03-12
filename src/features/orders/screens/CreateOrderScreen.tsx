@@ -1,6 +1,6 @@
 // src/features/orders/screens/CreateOrderScreen.tsx
-// Staff/Admin — Create order with auto customer provisioning
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+// Staff/Admin — Create order with auto customer provisioning + customer auto-suggest
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -24,10 +24,17 @@ import {
   Minus,
   CheckCircle,
   Broom,
+  X,
 } from 'phosphor-react-native';
 import { useAppDispatch, useAppSelector } from '@/app/store';
 import { createOrderThunk, clearOrderError } from '../ordersSlice';
 import { fetchServicesThunk } from '@/features/services/servicesSlice';
+import {
+  searchCustomersThunk,
+  clearSearchResults,
+  updateCustomerThunk,
+} from '@/features/customers/customersSlice';
+import type { Customer } from '@/features/customers/types';
 import {
   Colors,
   shadowCTA,
@@ -125,6 +132,7 @@ export default function CreateOrderScreen({ navigation }: Props) {
   const { list: services, isLoading: servicesLoading } = useAppSelector(
     (s) => s.services,
   );
+  const { searchResults, isSearching } = useAppSelector((s) => s.customers);
 
   // ── Form state ──
   const [customerPhone, setCustomerPhone] = useState('');
@@ -135,12 +143,115 @@ export default function CreateOrderScreen({ navigation }: Props) {
     new Map(),
   );
 
+  // ── Customer auto-suggest state ──
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [isNameEdited, setIsNameEdited] = useState(false);
+  const [isAddressEdited, setIsAddressEdited] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
+
   // ── Load services ──
   useEffect(() => {
     if (services.length === 0) {
       dispatch(fetchServicesThunk({ active: 'true' }));
     }
   }, [dispatch, services.length]);
+
+  // ── Cleanup on unmount ──
+  useEffect(() => {
+    return () => {
+      dispatch(clearSearchResults());
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, [dispatch]);
+
+  // ── Phone change handler with debounced search ──
+  const handlePhoneChange = useCallback(
+    (text: string) => {
+      setCustomerPhone(text);
+
+      // Clear selection if phone changes after selecting a customer
+      if (selectedCustomer) {
+        setSelectedCustomer(null);
+        setCustomerName('');
+        setCustomerAddress('');
+        setIsNameEdited(false);
+        setIsAddressEdited(false);
+      }
+
+      // Clear pending search
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+
+      // Trigger search when ≥ 2 characters
+      if (text.trim().length >= 2) {
+        searchDebounceRef.current = setTimeout(() => {
+          dispatch(searchCustomersThunk(text.trim()));
+          setShowSuggestions(true);
+        }, 300);
+      } else {
+        dispatch(clearSearchResults());
+        setShowSuggestions(false);
+      }
+    },
+    [dispatch, selectedCustomer],
+  );
+
+  // ── Select customer from suggestions ──
+  const handleSelectCustomer = useCallback(
+    (customer: Customer) => {
+      setSelectedCustomer(customer);
+      // Format phone for display (remove +84 prefix if present)
+      const displayPhone = customer.phone.startsWith('+84')
+        ? '0' + customer.phone.slice(3)
+        : customer.phone;
+      setCustomerPhone(displayPhone);
+      setCustomerName(customer.name || '');
+      setCustomerAddress(customer.address || '');
+      setIsNameEdited(false);
+      setIsAddressEdited(false);
+      setShowSuggestions(false);
+      dispatch(clearSearchResults());
+    },
+    [dispatch],
+  );
+
+  // ── Clear selection ──
+  const handleClearSelection = useCallback(() => {
+    setSelectedCustomer(null);
+    setCustomerPhone('');
+    setCustomerName('');
+    setCustomerAddress('');
+    setIsNameEdited(false);
+    setIsAddressEdited(false);
+    dispatch(clearSearchResults());
+    setShowSuggestions(false);
+  }, [dispatch]);
+
+  // ── Name change handler ──
+  const handleNameChange = useCallback(
+    (text: string) => {
+      setCustomerName(text);
+      if (selectedCustomer) {
+        setIsNameEdited(text !== (selectedCustomer.name || ''));
+      }
+    },
+    [selectedCustomer],
+  );
+
+  // ── Address change handler ──
+  const handleAddressChange = useCallback(
+    (text: string) => {
+      setCustomerAddress(text);
+      if (selectedCustomer) {
+        setIsAddressEdited(text !== (selectedCustomer.address || ''));
+      }
+    },
+    [selectedCustomer],
+  );
 
   // ── Active services only ──
   const activeServices = useMemo(
@@ -206,6 +317,26 @@ export default function CreateOrderScreen({ navigation }: Props) {
       ? customerPhone.trim()
       : `+84${customerPhone.trim().replace(/^0/, '')}`;
 
+    // If customer was selected and info was edited, update customer first
+    if (selectedCustomer && (isNameEdited || isAddressEdited)) {
+      const updatePayload: any = { id: selectedCustomer._id };
+      if (isNameEdited && customerName.trim()) {
+        updatePayload.name = customerName.trim();
+      }
+      if (isAddressEdited) {
+        updatePayload.address = customerAddress.trim() || undefined;
+      }
+
+      const updateResult = await dispatch(updateCustomerThunk(updatePayload));
+      if (updateCustomerThunk.rejected.match(updateResult)) {
+        Alert.alert(
+          'Lỗi',
+          'Không thể cập nhật thông tin khách hàng. Vui lòng thử lại.',
+        );
+        return; // Cancel order creation
+      }
+    }
+
     const items: CreateOrderItemPayload[] = itemsArray.map((item) => ({
       serviceId: item.service._id,
       quantity: item.quantity,
@@ -236,6 +367,9 @@ export default function CreateOrderScreen({ navigation }: Props) {
     itemsArray,
     dispatch,
     navigation,
+    selectedCustomer,
+    isNameEdited,
+    isAddressEdited,
   ]);
 
   return (
@@ -287,19 +421,78 @@ export default function CreateOrderScreen({ navigation }: Props) {
               THÔNG TIN KHÁCH HÀNG
             </Text>
 
-            {/* Phone */}
+            {/* Phone with auto-suggest */}
             <View className="mb-4">
-              <View className="flex-row items-center rounded-xl border border-slate-200 bg-slate-50 px-3">
-                <Phone size={18} color={Colors.slate400} weight="bold" />
+              <View
+                className={`flex-row items-center rounded-xl border bg-slate-50 px-3 ${
+                  selectedCustomer ? 'border-indigo-300' : 'border-slate-200'
+                }`}
+              >
+                <Phone size={18} color={selectedCustomer ? Colors.indigo600 : Colors.slate400} weight="bold" />
                 <TextInput
                   className="ml-3 flex-1 py-3 text-base font-semibold text-slate-900"
                   placeholder="0901234567 *"
                   placeholderTextColor={Colors.slate300}
                   keyboardType="phone-pad"
                   value={customerPhone}
-                  onChangeText={setCustomerPhone}
+                  onChangeText={handlePhoneChange}
                 />
+                {isSearching && (
+                  <ActivityIndicator size="small" color={Colors.indigo600} />
+                )}
+                {selectedCustomer && (
+                  <Pressable
+                    onPress={handleClearSelection}
+                    className="ml-2 h-6 w-6 items-center justify-center rounded-full bg-slate-200"
+                  >
+                    <X size={14} color={Colors.slate600} weight="bold" />
+                  </Pressable>
+                )}
               </View>
+
+              {/* Customer suggestions dropdown */}
+              {showSuggestions && searchResults.length > 0 && (
+                <View
+                  className="mt-1 rounded-xl border border-slate-200 bg-white"
+                  style={shadowCard}
+                >
+                  {searchResults.map((customer, index) => (
+                    <Pressable
+                      key={customer._id}
+                      onPress={() => handleSelectCustomer(customer)}
+                      className={`flex-row items-center px-3 py-3 ${
+                        index < searchResults.length - 1 ? 'border-b border-slate-100' : ''
+                      }`}
+                      style={({ pressed }) => [pressedStyleSmall(pressed)]}
+                    >
+                      <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-indigo-50">
+                        <User size={16} color={Colors.indigo600} weight="bold" />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-sm font-bold text-slate-900" numberOfLines={1}>
+                          {customer.name || 'Khách hàng'}
+                        </Text>
+                        <Text className="text-xs font-medium text-slate-500">
+                          {customer.phone.startsWith('+84')
+                            ? '0' + customer.phone.slice(3)
+                            : customer.phone}
+                        </Text>
+                      </View>
+                      <CheckCircle size={18} color={Colors.indigo600} weight="bold" />
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+
+              {/* Selected customer indicator */}
+              {selectedCustomer && (
+                <View className="mt-2 flex-row items-center">
+                  <CheckCircle size={14} color={Colors.green600} weight="fill" />
+                  <Text className="ml-1 text-xs font-medium text-green-600">
+                    Khách hàng đã có trong hệ thống
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Name */}
@@ -311,7 +504,7 @@ export default function CreateOrderScreen({ navigation }: Props) {
                   placeholder="Tên khách hàng *"
                   placeholderTextColor={Colors.slate300}
                   value={customerName}
-                  onChangeText={setCustomerName}
+                  onChangeText={handleNameChange}
                 />
               </View>
             </View>
@@ -325,7 +518,7 @@ export default function CreateOrderScreen({ navigation }: Props) {
                   placeholder="Địa chỉ (tùy chọn)"
                   placeholderTextColor={Colors.slate300}
                   value={customerAddress}
-                  onChangeText={setCustomerAddress}
+                  onChangeText={handleAddressChange}
                 />
               </View>
             </View>

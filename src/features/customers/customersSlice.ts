@@ -31,6 +31,9 @@ interface AdditionalCustomersState {
   isLoading: boolean;
   isLoadingMore: boolean;
   error: string | null;
+  // Search state for auto-suggest
+  searchResults: Customer[];
+  isSearching: boolean;
 }
 
 const initialState = customersAdapter.getInitialState<AdditionalCustomersState>({
@@ -39,6 +42,9 @@ const initialState = customersAdapter.getInitialState<AdditionalCustomersState>(
   isLoading: false,
   isLoadingMore: false,
   error: null,
+  // Search initial state
+  searchResults: [],
+  isSearching: false,
 });
 
 // ─── Thunks ─────────────────────────────────────────────────────
@@ -130,6 +136,21 @@ export const updateCustomerStatusThunk = createAsyncThunk(
   }
 );
 
+// Search customers for auto-suggest in CreateOrderScreen
+export const searchCustomersThunk = createAsyncThunk(
+  'customers/search',
+  async (query: string, { rejectWithValue }) => {
+    try {
+      const response = await customersService.searchCustomers(query);
+      return response.data.customers;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Tìm kiếm khách hàng thất bại'
+      );
+    }
+  }
+);
+
 // ─── Slice ──────────────────────────────────────────────────────
 const customersSlice = createSlice({
   name: 'customers',
@@ -140,6 +161,10 @@ const customersSlice = createSlice({
     },
     clearSelectedCustomer(state) {
       state.selectedId = null;
+    },
+    clearSearchResults(state) {
+      state.searchResults = [];
+      state.isSearching = false;
     },
   },
   extraReducers: (builder) => {
@@ -239,6 +264,20 @@ const customersSlice = createSlice({
         state.error = action.payload as string;
       });
 
+    // searchCustomersThunk
+    builder
+      .addCase(searchCustomersThunk.pending, (state) => {
+        state.isSearching = true;
+      })
+      .addCase(searchCustomersThunk.fulfilled, (state, action) => {
+        state.isSearching = false;
+        state.searchResults = action.payload;
+      })
+      .addCase(searchCustomersThunk.rejected, (state) => {
+        state.isSearching = false;
+        state.searchResults = [];
+      });
+
     // Reset on logout
     builder.addCase(logoutThunk.fulfilled, () => {
       return initialState;
@@ -246,7 +285,7 @@ const customersSlice = createSlice({
   },
 });
 
-export const { clearCustomersError, clearSelectedCustomer } = customersSlice.actions;
+export const { clearCustomersError, clearSelectedCustomer, clearSearchResults } = customersSlice.actions;
 
 // Export adapter selectors
 export const {

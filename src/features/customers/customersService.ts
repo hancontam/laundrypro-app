@@ -56,4 +56,16 @@ export const customersService = {
     });
     return response.data;
   },
+
+  /**
+   * Search customers by phone or name (Staff/Admin)
+   * Used for auto-suggest in CreateOrderScreen
+   */
+  async searchCustomers(query: string): Promise<CustomerListResponse> {
+    const response = await apiClient.get<CustomerListResponse>(
+      "/v1/users/customers",
+      { params: { search: query, limit: 5 } }
+    );
+    return response.data;
+  },
 };
