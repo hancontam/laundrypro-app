@@ -1,5 +1,5 @@
 // src/features/orders/screens/OrderDetailScreen.tsx
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,8 +7,8 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ArrowLeft,
   Receipt,
@@ -18,14 +18,14 @@ import {
   ClockCountdown,
   XCircle,
   ArrowCounterClockwise,
-} from 'phosphor-react-native';
-import { useAppDispatch, useAppSelector } from '@/app/store';
+} from "phosphor-react-native";
+import { useAppDispatch, useAppSelector } from "@/app/store";
 import {
   fetchOrderByIdThunk,
   updateOrderStatusThunk,
   clearSelectedOrder,
   clearOrderError,
-} from '../ordersSlice';
+} from "../ordersSlice";
 import {
   Colors,
   shadowCard,
@@ -35,59 +35,55 @@ import {
   pressedStyleSmall,
   layoutContainer,
   labelStyle,
-} from '@/theme/tokens';
-import type { Order, OrderItem, Payment, OrderStatus, PaymentStatus } from '../types';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
+} from "@/theme/tokens";
+import type { Order, OrderItem, OrderStatus } from "../types";
+import PaymentSummary from "../../payments/components/PaymentSummary";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RouteProp } from "@react-navigation/native";
 
 type MainStackParamList = {
   Home: undefined;
   OrderList: undefined;
   OrderDetail: { orderId: string };
+  CreatePayment: { orderId: string; amount: number };
 };
 
 type Props = {
-  navigation: NativeStackNavigationProp<MainStackParamList, 'OrderDetail'>;
-  route: RouteProp<MainStackParamList, 'OrderDetail'>;
+  navigation: NativeStackNavigationProp<MainStackParamList, "OrderDetail">;
+  route: RouteProp<MainStackParamList, "OrderDetail">;
 };
 
 // ─── Formatters ──────────────────────────────────────────────────
 function formatPrice(amount: number): string {
-  return amount.toLocaleString('vi-VN') + 'đ';
+  return amount.toLocaleString("vi-VN") + "đ";
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Date(iso).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
-// ─── Status badge config ─────────────────────────────────────────
-const ORDER_STATUS: Record<OrderStatus, { label: string; bg: string; text: string }> = {
-  pending: { label: 'Chờ xử lý', bg: 'bg-amber-50', text: 'text-amber-700' },
-  completed: { label: 'Hoàn thành', bg: 'bg-green-50', text: 'text-green-700' },
-};
-
-const PAYMENT_STATUS: Record<PaymentStatus, { label: string; icon: typeof CheckCircle; color: string }> = {
-  pending: { label: 'Chờ thanh toán', icon: ClockCountdown, color: Colors.slate500 },
-  paid: { label: 'Đã thanh toán', icon: CheckCircle, color: '#22C55E' },
-  failed: { label: 'Thất bại', icon: XCircle, color: '#DC2626' },
-  refunded: { label: 'Hoàn tiền', icon: ArrowCounterClockwise, color: Colors.slate500 },
-};
-
-const PAYMENT_METHOD_LABEL: Record<string, string> = {
-  cash: 'Tiền mặt',
-  momo: 'MoMo',
-  vnpay: 'VNPay',
-  bank: 'Chuyển khoản',
+const ORDER_STATUS: Record<
+  OrderStatus,
+  { label: string; bg: string; text: string }
+> = {
+  pending: { label: "Chờ xử lý", bg: "bg-amber-50", text: "text-amber-700" },
+  completed: { label: "Hoàn thành", bg: "bg-green-50", text: "text-green-700" },
 };
 
 // ─── Section card ────────────────────────────────────────────────
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <View
       className="mb-4 rounded-2xl border border-slate-100 bg-white p-4"
@@ -106,9 +102,12 @@ function ItemRow({ item }: { item: OrderItem }) {
   return (
     <View className="flex-row items-center justify-between border-b border-slate-100 py-3 last:border-b-0">
       <View className="flex-1">
-        <Text className="text-sm font-bold text-slate-900">{item.serviceName}</Text>
+        <Text className="text-sm font-bold text-slate-900">
+          {item.serviceName}
+        </Text>
         <Text className="mt-0.5 text-xs font-medium text-slate-400">
-          {item.serviceCategory} · {item.quantity} {item.serviceUnit} × {formatPrice(item.unitPrice)}
+          {item.serviceCategory} · {item.quantity} {item.serviceUnit} ×{" "}
+          {formatPrice(item.unitPrice)}
         </Text>
         {item.note ? (
           <Text className="mt-1 text-xs font-medium text-slate-400 italic">
@@ -139,22 +138,31 @@ export default function OrderDetailScreen({ navigation, route }: Props) {
   }, [dispatch, orderId]);
 
   const canUpdateStatus =
-    selectedOrder?.status === 'pending' &&
-    (userRole === 'staff' || userRole === 'admin');
+    selectedOrder?.status === "pending" &&
+    selectedOrder?.payment?.status === "paid" &&
+    (userRole === "staff" || userRole === "admin");
+
+  const canCreatePayment =
+    selectedOrder?.status === "pending" &&
+    !selectedOrder?.payment &&
+    (userRole === "staff" || userRole === "admin");
 
   const handleCompleteOrder = useCallback(() => {
     if (!selectedOrder) return;
     Alert.alert(
-      'Hoàn thành đơn hàng',
-      'Bạn có chắc muốn đánh dấu đơn hàng này là hoàn thành?',
+      "Hoàn thành đơn hàng",
+      "Bạn có chắc muốn đánh dấu đơn hàng này là hoàn thành?",
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: "Hủy", style: "cancel" },
         {
-          text: 'Xác nhận',
+          text: "Xác nhận",
           onPress: () => {
             dispatch(clearOrderError());
             dispatch(
-              updateOrderStatusThunk({ id: selectedOrder._id, status: 'completed' }),
+              updateOrderStatusThunk({
+                id: selectedOrder._id,
+                status: "completed",
+              }),
             );
           },
         },
@@ -172,13 +180,14 @@ export default function OrderDetailScreen({ navigation, route }: Props) {
 
   const order = selectedOrder;
 
-  const isPopulatedCustomer = order?.customerId && typeof order?.customerId === 'object';
+  const isPopulatedCustomer =
+    order?.customerId && typeof order?.customerId === "object";
   const displayCustomerName = isPopulatedCustomer
-    ? order.customerId.name || order.customerId.phone || '—'
-    : user?.name || user?.phone || '—';
+    ? order.customerId.name || order.customerId.phone || "—"
+    : user?.name || user?.phone || "—";
   const displayCustomerPhone = isPopulatedCustomer
     ? order.customerId.phone
-    : user?.phone || '—';
+    : user?.phone || "—";
 
   return (
     <SafeAreaView className="flex-1 bg-page">
@@ -195,8 +204,12 @@ export default function OrderDetailScreen({ navigation, route }: Props) {
           Chi tiết đơn hàng
         </Text>
         {order && (
-          <View className={`rounded-lg px-2.5 py-1 ${ORDER_STATUS[order.status].bg}`}>
-            <Text className={`text-xs font-bold ${ORDER_STATUS[order.status].text}`}>
+          <View
+            className={`rounded-lg px-2.5 py-1 ${ORDER_STATUS[order.status].bg}`}
+          >
+            <Text
+              className={`text-xs font-bold ${ORDER_STATUS[order.status].text}`}
+            >
               {ORDER_STATUS[order.status].label}
             </Text>
           </View>
@@ -224,14 +237,18 @@ export default function OrderDetailScreen({ navigation, route }: Props) {
               </Text>
             </View>
             <View className="mt-2 flex-row items-center justify-between">
-              <Text className="text-sm font-medium text-slate-500">Ngày tạo</Text>
+              <Text className="text-sm font-medium text-slate-500">
+                Ngày tạo
+              </Text>
               <Text className="text-sm font-semibold text-slate-700">
                 {formatDate(order.createdAt)}
               </Text>
             </View>
             {order.completedAt && (
               <View className="mt-2 flex-row items-center justify-between">
-                <Text className="text-sm font-medium text-slate-500">Hoàn thành</Text>
+                <Text className="text-sm font-medium text-slate-500">
+                  Hoàn thành
+                </Text>
                 <Text className="text-sm font-semibold text-green-600">
                   {formatDate(order.completedAt)}
                 </Text>
@@ -263,29 +280,39 @@ export default function OrderDetailScreen({ navigation, route }: Props) {
             </View>
 
             {/* Account Status */}
-            {isPopulatedCustomer && (order.customerId?.isVerified !== undefined || order.customerId?.hasPassword !== undefined) && (
-              <View className="mt-4 flex-row items-center gap-2 border-t border-slate-100 pt-3">
-                {order.customerId.isVerified ? (
-                  <View className="rounded bg-green-50 px-2 py-1">
-                    <Text className="text-[10px] font-bold text-green-700">ĐÃ XÁC THỰC</Text>
-                  </View>
-                ) : (
-                  <View className="rounded bg-red-50 px-2 py-1">
-                    <Text className="text-[10px] font-bold text-red-700">CHƯA XÁC THỰC</Text>
-                  </View>
-                )}
-                
-                {order.customerId.hasPassword ? (
-                  <View className="rounded bg-indigo-50 px-2 py-1">
-                    <Text className="text-[10px] font-bold text-indigo-700">ĐÃ TẠO MẬT KHẨU</Text>
-                  </View>
-                ) : (
-                  <View className="rounded bg-amber-50 px-2 py-1">
-                    <Text className="text-[10px] font-bold text-amber-700">CHƯA CÓ MẬT KHẨU</Text>
-                  </View>
-                )}
-              </View>
-            )}
+            {isPopulatedCustomer &&
+              (order.customerId?.isVerified !== undefined ||
+                order.customerId?.hasPassword !== undefined) && (
+                <View className="mt-4 flex-row items-center gap-2 border-t border-slate-100 pt-3">
+                  {order.customerId.isVerified ? (
+                    <View className="rounded bg-green-50 px-2 py-1">
+                      <Text className="text-[10px] font-bold text-green-700">
+                        ĐÃ XÁC THỰC
+                      </Text>
+                    </View>
+                  ) : (
+                    <View className="rounded bg-red-50 px-2 py-1">
+                      <Text className="text-[10px] font-bold text-red-700">
+                        CHƯA XÁC THỰC
+                      </Text>
+                    </View>
+                  )}
+
+                  {order.customerId.hasPassword ? (
+                    <View className="rounded bg-indigo-50 px-2 py-1">
+                      <Text className="text-[10px] font-bold text-indigo-700">
+                        ĐÃ TẠO MẬT KHẨU
+                      </Text>
+                    </View>
+                  ) : (
+                    <View className="rounded bg-amber-50 px-2 py-1">
+                      <Text className="text-[10px] font-bold text-amber-700">
+                        CHƯA CÓ MẬT KHẨU
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
           </SectionCard>
 
           {/* ── Items ── */}
@@ -295,7 +322,9 @@ export default function OrderDetailScreen({ navigation, route }: Props) {
             ))}
             {/* Total */}
             <View className="mt-3 flex-row items-center justify-between border-t border-slate-200 pt-3">
-              <Text className="text-sm font-bold text-slate-900">Tổng cộng</Text>
+              <Text className="text-sm font-bold text-slate-900">
+                Tổng cộng
+              </Text>
               <Text className="text-lg font-extrabold text-indigo-600">
                 {formatPrice(order.totalPrice)}
               </Text>
@@ -303,18 +332,36 @@ export default function OrderDetailScreen({ navigation, route }: Props) {
           </SectionCard>
 
           {/* ── Payment info ── */}
-          <SectionCard title="THANH TOÁN">
-            {order.payment ? (
-              <PaymentInfo payment={order.payment} />
-            ) : (
+          {order.payment ? (
+            <View>
+              <PaymentSummary payment={order.payment as any} />
+            </View>
+          ) : (
+            <SectionCard title="THANH TOÁN">
               <View className="items-center py-4">
                 <CreditCard size={24} color={Colors.slate300} weight="bold" />
                 <Text className="mt-2 text-sm font-medium text-slate-400">
                   Chưa có thanh toán
                 </Text>
+                {canCreatePayment && (
+                  <Pressable
+                    onPress={() =>
+                      navigation.navigate("CreatePayment", {
+                        orderId: order._id,
+                        amount: order.totalPrice,
+                      })
+                    }
+                    className="mt-4 flex-row items-center justify-center rounded-xl bg-indigo-50 px-6 py-3"
+                    style={({ pressed }) => pressedStyleSmall(pressed)}
+                  >
+                    <Text className="text-sm font-bold text-indigo-700">
+                      Tạo thanh toán mới
+                    </Text>
+                  </Pressable>
+                )}
               </View>
-            )}
-          </SectionCard>
+            </SectionCard>
+          )}
 
           {/* ── Complete button (Staff/Admin only, pending orders) ── */}
           {canUpdateStatus && (
@@ -343,53 +390,5 @@ export default function OrderDetailScreen({ navigation, route }: Props) {
         </ScrollView>
       )}
     </SafeAreaView>
-  );
-}
-
-// ─── Payment info sub-component ──────────────────────────────────
-function PaymentInfo({ payment }: { payment: Payment }) {
-  const statusConfig = PAYMENT_STATUS[payment.status] || PAYMENT_STATUS.pending;
-  const Icon = statusConfig.icon;
-
-  return (
-    <View>
-      <View className="flex-row items-center justify-between">
-        <Text className="text-sm font-medium text-slate-500">Phương thức</Text>
-        <Text className="text-sm font-bold text-slate-900">
-          {PAYMENT_METHOD_LABEL[payment.method] || payment.method}
-        </Text>
-      </View>
-      <View className="mt-2 flex-row items-center justify-between">
-        <Text className="text-sm font-medium text-slate-500">Trạng thái</Text>
-        <View className="flex-row items-center gap-1.5">
-          <Icon size={16} color={statusConfig.color} weight="bold" />
-          <Text className="text-sm font-bold" style={{ color: statusConfig.color }}>
-            {statusConfig.label}
-          </Text>
-        </View>
-      </View>
-      <View className="mt-2 flex-row items-center justify-between">
-        <Text className="text-sm font-medium text-slate-500">Số tiền</Text>
-        <Text className="text-sm font-extrabold text-slate-900">
-          {formatPrice(payment.amount)}
-        </Text>
-      </View>
-      {payment.transactionRef && (
-        <View className="mt-2 flex-row items-center justify-between">
-          <Text className="text-sm font-medium text-slate-500">Mã GD</Text>
-          <Text className="text-xs font-semibold text-slate-600">
-            {payment.transactionRef}
-          </Text>
-        </View>
-      )}
-      {payment.paidAt && (
-        <View className="mt-2 flex-row items-center justify-between">
-          <Text className="text-sm font-medium text-slate-500">Thanh toán lúc</Text>
-          <Text className="text-sm font-semibold text-slate-700">
-            {formatDate(payment.paidAt)}
-          </Text>
-        </View>
-      )}
-    </View>
   );
 }

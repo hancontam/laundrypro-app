@@ -1,27 +1,34 @@
 // src/features/profile/screens/ProfileScreen.tsx
-import React from 'react';
-import { View, Text, ScrollView, Pressable, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React from "react";
+import { View, Text, ScrollView, Pressable, Image } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   UserCircle,
   PencilSimple,
   LockKey,
   SignOut,
   CaretRight,
-} from 'phosphor-react-native';
-import { useAppDispatch, useAppSelector } from '@/app/store';
-import { logoutThunk } from '@/features/auth/authSlice';
-import { Colors, shadowCard, pressedStyle, layoutContainer } from '@/theme/tokens';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+  Receipt,
+} from "phosphor-react-native";
+import { useAppDispatch, useAppSelector } from "@/app/store";
+import { logoutThunk } from "@/features/auth/authSlice";
+import {
+  Colors,
+  shadowCard,
+  pressedStyle,
+  layoutContainer,
+} from "@/theme/tokens";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type MainStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
+  PaymentHistory: undefined;
 };
 
 type Props = {
-  navigation: NativeStackNavigationProp<MainStackParamList, 'Profile'>;
+  navigation: NativeStackNavigationProp<MainStackParamList, "Profile">;
 };
 
 function MenuRow({
@@ -94,7 +101,7 @@ export default function ProfileScreen({ navigation }: Props) {
 
           <View className="ml-4 flex-1">
             <Text className="text-lg font-bold text-slate-900">
-              {user.name || 'Người dùng'}
+              {user.name || "Người dùng"}
             </Text>
             <Text className="mt-1 text-sm font-medium text-slate-500">
               {user.phone}
@@ -115,13 +122,21 @@ export default function ProfileScreen({ navigation }: Props) {
           <MenuRow
             icon={PencilSimple}
             label="Chỉnh sửa thông tin"
-            onPress={() => navigation.navigate('EditProfile')}
+            onPress={() => navigation.navigate("EditProfile")}
           />
           {user.hasPassword && (
             <MenuRow
               icon={LockKey}
               label="Đổi mật khẩu"
-              onPress={() => navigation.navigate('ChangePassword')}
+              onPress={() => navigation.navigate("ChangePassword")}
+            />
+          )}
+
+          {user.role === "customer" && (
+            <MenuRow
+              icon={Receipt}
+              label="Lịch sử thanh toán"
+              onPress={() => navigation.navigate("PaymentHistory")}
             />
           )}
         </View>

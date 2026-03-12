@@ -40,6 +40,11 @@ import OrderListScreen from "@/features/orders/screens/OrderListScreen";
 import OrderDetailScreen from "@/features/orders/screens/OrderDetailScreen";
 import CreateOrderScreen from "@/features/orders/screens/CreateOrderScreen";
 
+// Payments screens
+import CreatePaymentScreen from "@/features/payments/screens/CreatePaymentScreen";
+import PaymentHistoryScreen from "@/features/customerPayments/screens/PaymentHistoryScreen";
+import PaymentDetailScreen from "@/features/customerPayments/screens/PaymentDetailScreen";
+
 // Services screens
 import ServiceListScreen from "@/features/services/screens/ServiceListScreen";
 import ServiceDetailScreen from "@/features/services/screens/ServiceDetailScreen";
@@ -81,6 +86,7 @@ export type MainStackParamList = {
   OrderList: undefined;
   OrderDetail: { orderId: string };
   CreateOrder: undefined;
+  CreatePayment: { orderId: string; amount: number };
   ServiceList: undefined;
   ServiceDetail: { serviceId: string };
   ServiceForm: { serviceId?: string } | undefined;
@@ -96,6 +102,8 @@ export type MainStackParamList = {
   CustomerForm: { customerId?: string } | undefined;
   Dashboard: undefined;
   ContactRequestList: undefined;
+  PaymentHistory: undefined;
+  PaymentDetail: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -305,6 +313,10 @@ function MainNavigator() {
       {isStaffOrAdmin && (
         <>
           <MainStack.Screen name="CreateOrder" component={CreateOrderScreen} />
+          <MainStack.Screen
+            name="CreatePayment"
+            component={CreatePaymentScreen}
+          />
           <MainStack.Screen name="ServiceForm" component={ServiceFormScreen} />
         </>
       )}
@@ -335,6 +347,13 @@ function MainNavigator() {
           />
         </>
       )}
+
+      {/* Customer Payment Screens */}
+      <MainStack.Screen
+        name="PaymentHistory"
+        component={PaymentHistoryScreen}
+      />
+      <MainStack.Screen name="PaymentDetail" component={PaymentDetailScreen} />
     </MainStack.Navigator>
   );
 }

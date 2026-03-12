@@ -8,6 +8,8 @@ import usersReducer from "@/features/users/usersSlice";
 import customersReducer from "@/features/customers/customersSlice";
 import profileReducer from "@/features/profile/profileSlice";
 import contactReducer from "@/features/contact/contactSlice";
+import paymentReducer from "@/features/payments/paymentSlice";
+import customerPaymentsReducer from "@/features/customerPayments/customerPaymentsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +20,8 @@ export const store = configureStore({
     customers: customersReducer,
     profile: profileReducer,
     contact: contactReducer,
+    payments: paymentReducer,
+    customerPayments: customerPaymentsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
