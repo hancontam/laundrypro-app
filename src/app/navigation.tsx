@@ -234,6 +234,18 @@ function HomeScreen({ navigation }: any) {
                   Dashboard
                 </Text>
               </Pressable>
+
+              <Pressable
+                onPress={() => navigation.navigate("ContactRequestList")}
+                className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3.5"
+                style={({ pressed }) => [
+                  shadowOutline,
+                  pressedStyleSmall(pressed),
+                ]}
+              >
+                <ClipboardText size={20} color={Colors.slate700} weight="bold" />
+                <Text className="text-sm font-bold text-slate-700">Yêu cầu liên hệ</Text>
+              </Pressable>
             </>
           )}
 

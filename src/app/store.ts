@@ -10,6 +10,7 @@ import profileReducer from "@/features/profile/profileSlice";
 import contactReducer from "@/features/contact/contactSlice";
 import paymentReducer from "@/features/payments/paymentSlice";
 import customerPaymentsReducer from "@/features/customerPayments/customerPaymentsSlice";
+import dashboardReducer from "@/features/dashboard/dashboardSlice";
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
     contact: contactReducer,
     payments: paymentReducer,
     customerPayments: customerPaymentsReducer,
+    dashboard: dashboardReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
