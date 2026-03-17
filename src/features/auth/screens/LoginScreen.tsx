@@ -38,6 +38,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 type AuthStackParamList = {
   Login: undefined;
   Otp: { phone: string; confirmation: FirebaseAuthTypes.ConfirmationResult };
+  ForgotPassword: { phone?: string } | undefined;
   SetPassword: undefined;
 };
 
@@ -294,6 +295,19 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               >
                 <Text className="text-sm font-semibold text-indigo-600">
                   Đăng nhập bằng OTP
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  dispatch(clearError());
+                  navigation.navigate('ForgotPassword', { phone });
+                }}
+                className="items-center py-2"
+                style={({ pressed }) => pressedStyle(pressed)}
+              >
+                <Text className="text-sm font-semibold text-slate-500">
+                  Quên mật khẩu?
                 </Text>
               </Pressable>
             </View>

@@ -4,6 +4,7 @@ import * as authService from "./authService";
 import type {
   AuthState,
   LoginPasswordPayload,
+  ResetPasswordWithOtpPayload,
   SetPasswordPayload,
   User,
 } from "./types";
@@ -93,6 +94,21 @@ export const setPasswordThunk = createAsyncThunk(
         error.response?.data?.message ||
         error.message ||
         "Failed to set password";
+      return rejectWithValue(msg);
+    }
+  },
+);
+
+export const resetPasswordWithOtpThunk = createAsyncThunk(
+  "auth/resetPasswordWithOtp",
+  async (payload: ResetPasswordWithOtpPayload, { rejectWithValue }) => {
+    try {
+      await authService.resetPasswordWithOtp(payload);
+    } catch (error: any) {
+      const msg =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to reset password";
       return rejectWithValue(msg);
     }
   },
@@ -205,6 +221,20 @@ const authSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(setPasswordThunk.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      });
+
+    // ── resetPasswordWithOtp ──
+    builder
+      .addCase(resetPasswordWithOtpThunk.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(resetPasswordWithOtpThunk.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(resetPasswordWithOtpThunk.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });

@@ -35,6 +35,8 @@ import {
 import LoginScreen from "@/features/auth/screens/LoginScreen";
 import OtpScreen from "@/features/auth/screens/OtpScreen";
 import SetPasswordScreen from "@/features/auth/screens/SetPasswordScreen";
+import ForgotPasswordScreen from "@/features/auth/screens/ForgotPasswordScreen";
+import ForgotPasswordOtpScreen from "@/features/auth/screens/ForgotPasswordOtpScreen";
 import GuestHomeScreen from "@/features/guest/screens/GuestHomeScreen";
 import ContactUsScreen from "@/features/contact/screens/ContactUsScreen";
 import OrderListScreen from "@/features/orders/screens/OrderListScreen";
@@ -64,6 +66,11 @@ export type AuthStackParamList = {
   ContactUs: undefined;
   Login: undefined;
   Otp: { phone: string; confirmation: FirebaseAuthTypes.ConfirmationResult };
+  ForgotPassword: { phone?: string } | undefined;
+  ForgotPasswordOtp: {
+    phone: string;
+    confirmation: FirebaseAuthTypes.ConfirmationResult;
+  };
   SetPassword: undefined;
 };
 
@@ -131,6 +138,8 @@ type ManageStackParamList = Pick<
   | "CreateStaff"
   | "EditStaff"
   | "ContactRequestList"
+  | "PaymentHistory"
+  | "PaymentDetail"
 >;
 
 type HomeStackParamList = Pick<MainStackParamList, "Home">;
@@ -436,6 +445,12 @@ function ManageHubScreen({ navigation }: any) {
           onPress={() => navigation.navigate("StaffList")}
         />
         <ManageRow
+          icon={CreditCard}
+          title="Lịch sử thanh toán"
+          description="Xem toàn bộ giao dịch thanh toán của khách hàng."
+          onPress={() => navigation.navigate("PaymentHistory")}
+        />
+        <ManageRow
           icon={ClipboardText}
           title="Yêu cầu liên hệ"
           description="Theo dõi phản hồi và yêu cầu mới từ khách hàng."
@@ -456,6 +471,11 @@ function AuthNavigator() {
       <AuthStack.Screen name="ContactUs" component={ContactUsScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Otp" component={OtpScreen} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <AuthStack.Screen
+        name="ForgotPasswordOtp"
+        component={ForgotPasswordOtpScreen}
+      />
       <AuthStack.Screen name="SetPassword" component={SetPasswordScreen} />
     </AuthStack.Navigator>
   );
@@ -554,6 +574,11 @@ function ManageNavigator() {
       <ManageStack.Screen name="CreateStaff" component={CreateStaffScreen} />
       <ManageStack.Screen name="EditStaff" component={EditStaffScreen} />
       <ManageStack.Screen
+        name="PaymentHistory"
+        component={PaymentHistoryScreen}
+      />
+      <ManageStack.Screen name="PaymentDetail" component={PaymentDetailScreen} />
+      <ManageStack.Screen
         name="ContactRequestList"
         component={ContactRequestListScreen}
       />
@@ -639,6 +664,8 @@ function MainTabsNavigator() {
               "StaffDetail",
               "CreateStaff",
               "EditStaff",
+              "PaymentHistory",
+              "PaymentDetail",
               "ContactRequestList",
             ]),
           })}

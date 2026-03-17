@@ -55,6 +55,12 @@ export default function PaymentDetailScreen({ navigation }: Props) {
 
   const { amount, method, status, createdAt, transactionRef, orderId, paidAt } =
     selectedPayment;
+  const customerLabel =
+    selectedPayment.customerName ||
+    selectedPayment.customerPhone ||
+    (selectedPayment.customerId
+      ? `#${selectedPayment.customerId.slice(-6).toUpperCase()}`
+      : null);
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50">
@@ -94,9 +100,23 @@ export default function PaymentDetailScreen({ navigation }: Props) {
               </Text>
             </View>
             <Text className="text-sm font-bold text-slate-900">
-              #{orderId.slice(-8).toUpperCase()}
+              #{selectedPayment.orderCode || orderId.slice(-8).toUpperCase()}
             </Text>
           </View>
+
+          {customerLabel && (
+            <View className="mb-4 flex-row justify-between border-b border-slate-100 pb-4">
+              <View className="flex-row items-center">
+                <Receipt size={20} color={Colors.slate400} />
+                <Text className="ml-2 text-sm font-medium text-slate-600">
+                  Khách hàng
+                </Text>
+              </View>
+              <Text className="text-sm font-bold text-slate-900">
+                {customerLabel}
+              </Text>
+            </View>
+          )}
 
           <View className="mb-4 flex-row justify-between border-b border-slate-100 pb-4">
             <View className="flex-row items-center">

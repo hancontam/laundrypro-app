@@ -4,6 +4,7 @@ import type {
   ApiSuccessResponse,
   CheckLoginData,
   LoginPasswordPayload,
+  ResetPasswordWithOtpPayload,
   SetPasswordPayload,
   User,
 } from "./types";
@@ -49,6 +50,16 @@ export async function loginWithPassword(
  */
 export async function setPassword(payload: SetPasswordPayload): Promise<void> {
   await apiClient.post(`${AUTH_BASE}/password`, payload);
+}
+
+/**
+ * POST /v1/users/reset-password-otp
+ * Reset password after Firebase OTP verification.
+ */
+export async function resetPasswordWithOtp(
+  payload: ResetPasswordWithOtpPayload,
+): Promise<void> {
+  await apiClient.post(`${AUTH_BASE}/reset-password-otp`, payload);
 }
 
 /**

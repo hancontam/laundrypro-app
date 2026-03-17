@@ -1,14 +1,17 @@
 // src/features/customerPayments/components/PaymentHistoryItem.tsx
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { Receipt, CaretRight } from "phosphor-react-native";
 import PaymentStatusBadge from "./PaymentStatusBadge";
 import { Colors, shadowCard, pressedStyle } from "@/theme/tokens";
-import type { Payment } from "../types";
+import type { Payment, PaymentStatus } from "../types";
 
 interface Props {
   payment: Payment;
   onPress: (payment: Payment) => void;
+  showStatusActions?: boolean;
+  isUpdating?: boolean;
+  onStatusChange?: (payment: Payment, status: PaymentStatus) => void;
 }
 
 function formatPrice(amount: number): string {
@@ -32,7 +35,33 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
   bank: "Chuyển khoản",
 };
 
-export default function PaymentHistoryItem({ payment, onPress }: Props) {
+const STATUS_ACTIONS: Record<PaymentStatus, PaymentStatus[]> = {
+  pending: ["paid", "failed", "refunded"],
+  paid: ["refunded"],
+  failed: ["pending", "paid", "refunded"],
+  refunded: [],
+};
+
+const STATUS_ACTION_LABEL: Record<PaymentStatus, string> = {
+  pending: "Chờ",
+  paid: "Đã thanh toán",
+  failed: "Thất bại",
+  refunded: "Hoàn tiền",
+};
+
+export default function PaymentHistoryItem({
+  payment,
+  onPress,
+  showStatusActions = false,
+  isUpdating = false,
+  onStatusChange,
+}: Props) {
+  const customerLabel =
+    payment.customerName ||
+    payment.customerPhone ||
+    (payment.customerId ? `Khách #${payment.customerId.slice(-6).toUpperCase()}` : null);
+  const nextStatuses = STATUS_ACTIONS[payment.status];
+
   return (
     <Pressable
       onPress={() => onPress(payment)}
@@ -53,15 +82,55 @@ export default function PaymentHistoryItem({ payment, onPress }: Props) {
 
         <View className="mt-1 flex-row items-center justify-between">
           <Text className="text-sm font-medium text-slate-500">
-            #{payment.orderId.slice(-8).toUpperCase()}
+            #{payment.orderCode || payment.orderId.slice(-8).toUpperCase()}
           </Text>
           <Text className="text-xs font-medium text-slate-400">
             {formatDate(payment.createdAt)}
           </Text>
         </View>
+        {customerLabel && (
+          <Text className="mt-1 text-xs font-medium text-slate-500">
+            {customerLabel}
+          </Text>
+        )}
         <Text className="mt-1 text-xs font-semibold text-indigo-600">
           {PAYMENT_METHOD_LABEL[payment.method] || payment.method.toUpperCase()}
         </Text>
+
+        {showStatusActions && (
+          <View className="mt-3">
+            <Text className="mb-2 text-xs font-bold uppercase tracking-[1px] text-slate-400">
+              Cập nhật trạng thái
+            </Text>
+            {isUpdating ? (
+              <View className="flex-row items-center">
+                <ActivityIndicator size="small" color={Colors.indigo600} />
+                <Text className="ml-2 text-xs font-medium text-slate-500">
+                  Đang cập nhật...
+                </Text>
+              </View>
+            ) : nextStatuses.length > 0 ? (
+              <View className="flex-row flex-wrap gap-2">
+                {nextStatuses.map((status) => (
+                  <Pressable
+                    key={status}
+                    onPress={() => onStatusChange?.(payment, status)}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2"
+                    style={({ pressed }) => pressedStyle(pressed)}
+                  >
+                    <Text className="text-xs font-bold text-slate-700">
+                      {STATUS_ACTION_LABEL[status]}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : (
+              <Text className="text-xs font-medium text-slate-400">
+                Không thể cập nhật thêm
+              </Text>
+            )}
+          </View>
+        )}
       </View>
 
       <View className="ml-2 pl-2">

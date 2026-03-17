@@ -65,3 +65,8 @@ export interface LoginPasswordPayload {
   phone: string;
   password: string;
 }
+
+export interface ResetPasswordWithOtpPayload {
+  idToken: string;
+  newPassword: string;
+}
