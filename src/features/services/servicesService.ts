@@ -4,6 +4,7 @@
 // No 410 handling — apiClient interceptor handles token refresh.
 
 import apiClient from "../../core/api/apiClient";
+import { Platform } from "react-native";
 import type {
   FetchServicesParams,
   ServicesListResponse,
@@ -50,11 +51,14 @@ export async function getServiceById(
 export async function createService(
   payload: CreateServicePayload,
 ): Promise<ServiceMutationResponse> {
-  const formData = buildFormData(payload);
+  const formData = await buildFormData(payload);
   const { data } = await apiClient.post<ServiceMutationResponse>(
     "/v1/services",
     formData,
-    { headers: { "Content-Type": "multipart/form-data" } },
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+      transformRequest: (data) => data,
+    },
   );
   return data;
 }
@@ -64,11 +68,14 @@ export async function updateService(
   id: string,
   payload: UpdateServicePayload,
 ): Promise<ServiceMutationResponse> {
-  const formData = buildFormData(payload);
+  const formData = await buildFormData(payload);
   const { data } = await apiClient.put<ServiceMutationResponse>(
     `/v1/services/${id}`,
     formData,
-    { headers: { "Content-Type": "multipart/form-data" } },
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+      transformRequest: (data) => data,
+    },
   );
   return data;
 }
@@ -83,13 +90,29 @@ export async function deleteService(
 
 // ─── Helper ──────────────────────────────────────────────────────
 
-function buildFormData(payload: Record<string, any>): FormData {
+async function buildFormData(payload: Record<string, any>): Promise<FormData> {
   const fd = new FormData();
   for (const [key, value] of Object.entries(payload)) {
     if (value === undefined || value === null) continue;
     if (key === "image" && typeof value === "object" && value.uri) {
-      // React Native file object: { uri, type, name }
-      fd.append("image", value as any);
+      fd.append("image", {
+        uri:
+          Platform.OS === "android" ? value.uri : value.uri.replace("file://", ""),
+        type: value.type || "image/jpeg",
+        name: value.name || "service-image.jpg",
+      } as any);
+    } else if (key === "imageUrl" && typeof value === "string" && value.trim()) {
+      const response = await fetch(value.trim());
+      if (!response.ok) {
+        throw new Error("Không thể tải ảnh từ URL đã nhập");
+      }
+
+      const blob = await response.blob();
+      const filenameFromUrl = value.split("/").pop()?.split("?")[0];
+      const extensionFromType = blob.type?.split("/")[1] || "jpg";
+      const filename = filenameFromUrl || `service-image.${extensionFromType}`;
+
+      fd.append("image", blob, filename);
     } else {
       fd.append(key, String(value));
     }

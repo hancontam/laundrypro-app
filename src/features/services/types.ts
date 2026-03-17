@@ -9,10 +9,16 @@ export interface Service {
   category: string;
   price: number;
   unit: string;
-  image?: string;
+  image?: string | null;
   active: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UploadImageFile {
+  uri: string;
+  type?: string;
+  name?: string;
 }
 
 // ─── API params ──────────────────────────────────────────────────
@@ -32,7 +38,8 @@ export interface CreateServicePayload {
   price: number;
   unit: string;
   active?: boolean;
-  image?: any; // File object for multipart upload
+  image?: UploadImageFile;
+  imageUrl?: string;
 }
 
 /** PUT /v1/services/:id — multipart/form-data, all optional */
@@ -42,7 +49,9 @@ export interface UpdateServicePayload {
   price?: number;
   unit?: string;
   active?: boolean;
-  image?: any;
+  image?: UploadImageFile;
+  imageUrl?: string;
+  removeImage?: boolean;
 }
 
 // ─── API response shapes ─────────────────────────────────────────

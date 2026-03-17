@@ -220,7 +220,7 @@ export default function OrderListScreen({ navigation }: Props) {
       {canCreate && (
         <Pressable
           onPress={() => navigation.navigate('CreateOrder')}
-          className="absolute bottom-6 right-6 h-14 w-14 items-center justify-center rounded-full bg-slate-900"
+          className="absolute bottom-28 right-6 h-14 w-14 items-center justify-center rounded-full bg-slate-900"
           style={({ pressed }) => [shadowCTA, pressedStyleSmall(pressed)]}
         >
           <Plus size={24} color="#fff" weight="bold" />

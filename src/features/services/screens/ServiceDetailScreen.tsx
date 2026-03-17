@@ -7,6 +7,7 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -177,9 +178,17 @@ export default function ServiceDetailScreen({ navigation, route }: Props) {
         >
           {/* Service icon + name */}
           <View className="mb-6 items-center">
-            <View className="mb-4 h-20 w-20 items-center justify-center rounded-full bg-indigo-50">
-              <Broom size={40} color={Colors.indigo600} weight="bold" />
-            </View>
+            {service.image ? (
+              <Image
+                source={{ uri: service.image }}
+                className="mb-4 h-44 w-full rounded-3xl bg-slate-100"
+                resizeMode="cover"
+              />
+            ) : (
+              <View className="mb-4 h-20 w-20 items-center justify-center rounded-full bg-indigo-50">
+                <Broom size={40} color={Colors.indigo600} weight="bold" />
+              </View>
+            )}
             <Text className="text-xl font-extrabold text-slate-900">
               {service.name}
             </Text>

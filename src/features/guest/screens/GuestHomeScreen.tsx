@@ -7,6 +7,7 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -48,10 +49,18 @@ function GuestServiceCard({ service }: { service: Service }) {
       className="mb-3 flex-row items-center rounded-2xl border border-slate-100 bg-white p-4"
       style={shadowCard}
     >
-      {/* Icon */}
-      <View className="mr-3 h-12 w-12 items-center justify-center rounded-full bg-indigo-50">
-        <Broom size={24} color={Colors.indigo600} weight="bold" />
-      </View>
+      {/* Image / Fallback Icon */}
+      {service.image ? (
+        <Image
+          source={{ uri: service.image }}
+          className="mr-3 h-12 w-12 rounded-full bg-slate-100"
+          resizeMode="cover"
+        />
+      ) : (
+        <View className="mr-3 h-12 w-12 items-center justify-center rounded-full bg-indigo-50">
+          <Broom size={24} color={Colors.indigo600} weight="bold" />
+        </View>
+      )}
 
       {/* Info */}
       <View className="flex-1">

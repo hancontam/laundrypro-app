@@ -7,6 +7,7 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Broom, CaretRight, Plus, Tag } from 'phosphor-react-native';
@@ -54,9 +55,17 @@ function ServiceCard({
       style={({ pressed }) => [shadowCard, pressedStyle(pressed)]}
     >
       {/* Icon */}
-      <View className="mr-3 h-12 w-12 items-center justify-center rounded-full bg-indigo-50">
-        <Broom size={24} color={Colors.indigo600} weight="bold" />
-      </View>
+      {service.image ? (
+        <Image
+          source={{ uri: service.image }}
+          className="mr-3 h-12 w-12 rounded-full bg-slate-100"
+          resizeMode="cover"
+        />
+      ) : (
+        <View className="mr-3 h-12 w-12 items-center justify-center rounded-full bg-indigo-50">
+          <Broom size={24} color={Colors.indigo600} weight="bold" />
+        </View>
+      )}
 
       {/* Info */}
       <View className="flex-1">
@@ -167,7 +176,7 @@ export default function ServiceListScreen({ navigation }: Props) {
       {userRole === 'admin' && (
         <Pressable
           onPress={() => navigation.navigate('ServiceForm', undefined)}
-          className="absolute bottom-6 right-6 h-14 w-14 items-center justify-center rounded-full bg-slate-900"
+          className="absolute bottom-28 right-6 h-14 w-14 items-center justify-center rounded-full bg-slate-900"
           style={({ pressed }) => [shadowCTA, pressedStyleSmall(pressed)]}
         >
           <Plus size={24} color="#fff" weight="bold" />
