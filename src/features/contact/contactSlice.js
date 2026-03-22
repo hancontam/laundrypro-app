@@ -11,6 +11,7 @@ const initialState = {
     },
     isLoading: false,
     isLoadingMore: false,
+    updatingContactId: null,
     error: null,
 };
 export const fetchContactsThunk = createAsyncThunk("contact/fetchContacts", async (params, { rejectWithValue }) => {
@@ -40,6 +41,15 @@ export const loadMoreContactsThunk = createAsyncThunk("contact/loadMoreContacts"
         if (err === "No more pages")
             return rejectWithValue(err);
         return rejectWithValue(err.response?.data?.message || "Không thể tải thêm liên hệ");
+    }
+});
+export const updateContactStatusThunk = createAsyncThunk("contact/updateStatus", async ({ contactId, status }, { rejectWithValue }) => {
+    try {
+        const data = await contactService.updateContactStatus(contactId, status);
+        return { contactId, data };
+    }
+    catch (err) {
+        return rejectWithValue(err.response?.data?.message || "Không thể cập nhật trạng thái liên hệ");
     }
 });
 const contactSlice = createSlice({
@@ -100,6 +110,23 @@ const contactSlice = createSlice({
             if (action.payload !== "No more pages") {
                 state.error = action.payload;
             }
+        })
+            .addCase(updateContactStatusThunk.pending, (state, action) => {
+            state.updatingContactId = action.meta.arg.contactId;
+            state.error = null;
+        })
+            .addCase(updateContactStatusThunk.fulfilled, (state, action) => {
+            state.updatingContactId = null;
+            state.list = state.list.map((contact) => contact._id === action.payload.contactId
+                ? {
+                    ...contact,
+                    ...action.payload.data,
+                }
+                : contact);
+        })
+            .addCase(updateContactStatusThunk.rejected, (state, action) => {
+            state.updatingContactId = null;
+            state.error = action.payload;
         })
             // Reset on logout
             .addCase(logoutThunk.fulfilled, () => initialState)

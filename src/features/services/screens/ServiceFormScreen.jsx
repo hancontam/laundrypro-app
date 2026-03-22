@@ -3,9 +3,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Switch, Image, Alert, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { ArrowLeft, FloppyDisk, ImageSquare, Link, Trash, } from 'phosphor-react-native';
+import { ArrowLeft, FloppyDisk, ImageSquare, Trash, } from 'phosphor-react-native';
 import { useAppDispatch, useAppSelector } from '@/app/store';
-import { createServiceThunk, updateServiceThunk, fetchServiceByIdThunk, clearServiceError, clearSelectedService, } from '../servicesSlice';
+import { createServiceThunk, updateServiceThunk, fetchServiceByIdThunk, clearServiceError, } from '../servicesSlice';
 import { Colors, shadowCTA, shadowFloating, pressedStyle, pressedStyleSmall, layoutContainer, labelStyle, shadowCard, } from '@/theme/tokens';
 export default function ServiceFormScreen({ navigation, route }) {
     const serviceId = route.params?.serviceId;
@@ -20,15 +20,11 @@ export default function ServiceFormScreen({ navigation, route }) {
     const [imageFile, setImageFile] = useState(null);
     const [existingImage, setExistingImage] = useState(null);
     const [removeImage, setRemoveImage] = useState(false);
-    const [imageUrlInput, setImageUrlInput] = useState('');
     // Load existing service for edit mode
     useEffect(() => {
         if (isEdit && serviceId) {
             dispatch(fetchServiceByIdThunk(serviceId));
         }
-        return () => {
-            dispatch(clearSelectedService());
-        };
     }, [dispatch, isEdit, serviceId]);
     // Populate form when service loads
     useEffect(() => {
@@ -41,18 +37,14 @@ export default function ServiceFormScreen({ navigation, route }) {
             setExistingImage(selectedService.image || null);
             setImageFile(null);
             setRemoveImage(false);
-            setImageUrlInput('');
         }
         else if (!isEdit) {
             setExistingImage(null);
             setImageFile(null);
             setRemoveImage(false);
-            setImageUrlInput('');
         }
     }, [isEdit, selectedService]);
-    const normalizedImageUrl = imageUrlInput.trim();
     const previewImageUri = imageFile?.uri ||
-        (normalizedImageUrl ? normalizedImageUrl : null) ||
         (!removeImage ? existingImage : null);
     const isValid = name.trim() && category.trim() && price.trim() && unit.trim();
     const handlePickImage = useCallback(async () => {
@@ -75,12 +67,10 @@ export default function ServiceFormScreen({ navigation, route }) {
             type: asset.mimeType || 'image/jpeg',
             name: asset.fileName || `service-${Date.now()}.jpg`,
         });
-        setImageUrlInput('');
         setRemoveImage(false);
     }, []);
     const handleRemoveImage = useCallback(() => {
         setImageFile(null);
-        setImageUrlInput('');
         if (existingImage) {
             setRemoveImage(true);
         }
@@ -96,7 +86,6 @@ export default function ServiceFormScreen({ navigation, route }) {
             unit: unit.trim(),
             active,
             ...(imageFile ? { image: imageFile } : {}),
-            ...(!imageFile && normalizedImageUrl ? { imageUrl: normalizedImageUrl } : {}),
         };
         if (isEdit && serviceId) {
             const result = await dispatch(updateServiceThunk({
@@ -123,7 +112,6 @@ export default function ServiceFormScreen({ navigation, route }) {
         unit,
         active,
         imageFile,
-        normalizedImageUrl,
         removeImage,
         isEdit,
         serviceId,
@@ -182,24 +170,9 @@ export default function ServiceFormScreen({ navigation, route }) {
                 </Pressable>)}
             </View>
 
-            <View className="mt-4">
-              <Text className="mb-2 text-slate-500" style={labelStyle}>
-                HOẶC DÁN URL ẢNH
-              </Text>
-              <View className="flex-row items-center rounded-xl border border-slate-200 bg-slate-50 px-3">
-                <Link size={18} color={Colors.slate400} weight="bold"/>
-                <TextInput className="flex-1 py-3.5 pl-3 text-sm font-medium text-slate-900" placeholder="https://example.com/service.jpg" placeholderTextColor={Colors.slate300} value={imageUrlInput} autoCapitalize="none" autoCorrect={false} keyboardType="url" onChangeText={(text) => {
-            setImageUrlInput(text);
-            if (text.trim()) {
-                setImageFile(null);
-                setRemoveImage(false);
-            }
-        }}/>
-              </View>
-              <Text className="mt-2 text-xs font-medium leading-5 text-slate-500">
-                Nếu nhập URL, app sẽ tải ảnh đó và gửi lên server như một ảnh upload.
-              </Text>
-            </View>
+            <Text className="mt-4 text-xs font-medium leading-5 text-slate-500">
+              Chọn ảnh từ thư viện để thêm hình minh họa cho dịch vụ.
+            </Text>
           </View>
 
           {/* §3.3 — Name */}

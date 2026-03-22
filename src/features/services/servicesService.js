@@ -58,17 +58,6 @@ async function buildFormData(payload) {
                 name: value.name || "service-image.jpg",
             });
         }
-        else if (key === "imageUrl" && typeof value === "string" && value.trim()) {
-            const response = await fetch(value.trim());
-            if (!response.ok) {
-                throw new Error("Không thể tải ảnh từ URL đã nhập");
-            }
-            const blob = await response.blob();
-            const filenameFromUrl = value.split("/").pop()?.split("?")[0];
-            const extensionFromType = blob.type?.split("/")[1] || "jpg";
-            const filename = filenameFromUrl || `service-image.${extensionFromType}`;
-            fd.append("image", blob, filename);
-        }
         else {
             fd.append(key, String(value));
         }

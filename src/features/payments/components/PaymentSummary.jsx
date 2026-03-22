@@ -1,18 +1,7 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { shadowCard, labelStyle } from "@/theme/tokens";
-const PAYMENT_STATUS_LABEL = {
-    pending: "Chờ thanh toán",
-    paid: "Đã thanh toán",
-    failed: "Thất bại",
-    refunded: "Hoàn tiền",
-};
-const PAYMENT_METHOD_LABEL = {
-    cash: "Tiền mặt",
-    momo: "MoMo",
-    vnpay: "VNPay",
-    bank: "Chuyển khoản",
-};
+import { PAYMENT_METHOD_LABEL, PAYMENT_STATUS_META } from "../paymentMeta";
 function formatPrice(amount) {
     return amount.toLocaleString("vi-VN") + "đ";
 }
@@ -32,14 +21,14 @@ function InfoRow({ label, value, valueClassName = "text-slate-900", }) {
     </View>);
 }
 export default function PaymentSummary({ payment }) {
-    const isPaid = payment.status === "paid";
+    const statusMeta = PAYMENT_STATUS_META[payment.status] || PAYMENT_STATUS_META.pending;
     return (<View className="mb-4 rounded-2xl border border-slate-100 bg-white p-4" style={shadowCard}>
       <Text className="mb-3 text-slate-400" style={labelStyle}>
         THÔNG TIN THANH TOÁN
       </Text>
 
       <View className="flex-row items-center justify-between">
-        <Text className="text-sm font-medium text-slate-500">Giới hạn</Text>
+        <Text className="text-sm font-medium text-slate-500">Số tiền</Text>
         <Text className="text-lg font-extrabold text-indigo-600">
           {formatPrice(payment.amount)}
         </Text>
@@ -47,7 +36,7 @@ export default function PaymentSummary({ payment }) {
 
       <InfoRow label="Phương thức" value={PAYMENT_METHOD_LABEL[payment.method] || payment.method}/>
 
-      <InfoRow label="Trạng thái" value={PAYMENT_STATUS_LABEL[payment.status] || payment.status} valueClassName={isPaid ? "text-green-600" : "text-amber-600"}/>
+      <InfoRow label="Trạng thái" value={statusMeta.label} valueClassName={statusMeta.valueClassName}/>
 
       {payment.transactionRef && (<InfoRow label="Mã GD" value={payment.transactionRef} valueClassName="text-slate-600 font-semibold text-xs"/>)}
 

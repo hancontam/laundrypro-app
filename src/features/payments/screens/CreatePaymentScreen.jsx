@@ -13,7 +13,7 @@ export default function CreatePaymentScreen({ navigation, route }) {
     const { orderId, amount } = route.params;
     const dispatch = useAppDispatch();
     const { isCreating, error } = useAppSelector((state) => state.payments);
-    const [method, setMethod] = useState(null);
+    const [method, setMethod] = useState("cash");
     const handleCreatePayment = async () => {
         if (!method) {
             Alert.alert("Lỗi", "Vui lòng chọn phương thức thanh toán");
@@ -29,9 +29,6 @@ export default function CreatePaymentScreen({ navigation, route }) {
         if (createPaymentRequestThunk.fulfilled.match(resultAction)) {
             Alert.alert("Thành công", "Đã tạo yêu cầu thanh toán");
             navigation.goBack();
-            // Note: If MOMO needs webview/QR, we would handle it here based on response,
-            // but the API docs say we return momo payment URL/QR in response.
-            // We will just navigate back and let OrderDetail handle or show success.
         }
     };
     return (<SafeAreaView className="flex-1 bg-page">

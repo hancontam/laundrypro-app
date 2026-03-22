@@ -1,33 +1,64 @@
-import React, { useCallback, useEffect } from 'react';
-import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl, } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { UserCircle, CaretRight, Plus, UsersThree } from 'phosphor-react-native';
-import { useAppDispatch, useAppSelector } from '@/app/store';
-import { fetchStaffThunk, loadMoreStaffThunk } from '../usersSlice';
-import { Colors, shadowCard, shadowCTA, pressedStyle, pressedStyleSmall, layoutContainer, } from '@/theme/tokens';
+import React, { useCallback, useEffect } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  ActivityIndicator,
+  RefreshControl,
+} from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import {
+  ArrowLeft,
+  UserCircle,
+  CaretRight,
+  Plus,
+  UsersThree,
+} from "phosphor-react-native";
+import { useAppDispatch, useAppSelector } from "@/app/store";
+import { fetchStaffThunk, loadMoreStaffThunk } from "../usersSlice";
+import {
+  Colors,
+  shadowCard,
+  shadowCTA,
+  shadowFloating,
+  pressedStyle,
+  pressedStyleSmall,
+  layoutContainer,
+} from "@/theme/tokens";
 // ─── Status badge ────────────────────────────────────────────────
 const STATUS_CONFIG = {
-    active: { label: 'Hoạt động', bg: 'bg-green-50', text: 'text-green-700' },
-    suspended: { label: 'Đình chỉ', bg: 'bg-red-50', text: 'text-red-600' },
+  active: { label: "Hoạt động", bg: "bg-green-50", text: "text-green-700" },
+  suspended: { label: "Đình chỉ", bg: "bg-red-50", text: "text-red-600" },
 };
 function StatusBadge({ status }) {
-    const config = STATUS_CONFIG[status] || STATUS_CONFIG.active;
-    return (<View className={`rounded-lg px-2.5 py-1 ${config.bg}`}>
+  const config = STATUS_CONFIG[status] || STATUS_CONFIG.active;
+  return (
+    <View className={`rounded-lg px-2.5 py-1 ${config.bg}`}>
       <Text className={`text-xs font-bold ${config.text}`}>{config.label}</Text>
-    </View>);
+    </View>
+  );
 }
 // ─── Staff card ──────────────────────────────────────────────────
-function StaffCard({ user, onPress, }) {
-    return (<Pressable onPress={onPress} className="mb-3 flex-row items-center rounded-2xl border border-slate-100 bg-white p-4" style={({ pressed }) => [shadowCard, pressedStyle(pressed)]}>
+function StaffCard({ user, onPress }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="mb-3 flex-row items-center rounded-2xl border border-slate-100 bg-white p-4"
+      style={({ pressed }) => [shadowCard, pressedStyle(pressed)]}
+    >
       {/* Avatar */}
       <View className="mr-3 h-12 w-12 items-center justify-center rounded-full bg-indigo-50">
-        <UserCircle size={28} color={Colors.indigo600} weight="bold"/>
+        <UserCircle size={28} color={Colors.indigo600} weight="bold" />
       </View>
 
       {/* Info */}
       <View className="flex-1">
         <Text className="text-base font-bold text-slate-900">
-          {user.name || '—'}
+          {user.name || "—"}
         </Text>
         <Text className="mt-0.5 text-xs font-medium text-slate-500">
           {user.phone}
@@ -35,15 +66,22 @@ function StaffCard({ user, onPress, }) {
       </View>
 
       {/* Status + Arrow */}
-      <StatusBadge status={user.status}/>
-      <CaretRight size={16} color={Colors.slate400} weight="bold" style={{ marginLeft: 8 }}/>
-    </Pressable>);
+      <StatusBadge status={user.status} />
+      <CaretRight
+        size={16}
+        color={Colors.slate400}
+        weight="bold"
+        style={{ marginLeft: 8 }}
+      />
+    </Pressable>
+  );
 }
 // ─── Empty state ─────────────────────────────────────────────────
 function EmptyState() {
-    return (<View className="flex-1 items-center justify-center py-20">
+  return (
+    <View className="flex-1 items-center justify-center py-20">
       <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-indigo-50">
-        <UsersThree size={32} color={Colors.indigo600} weight="bold"/>
+        <UsersThree size={32} color={Colors.indigo600} weight="bold" />
       </View>
       <Text className="text-lg font-extrabold text-slate-900">
         Chưa có nhân viên
@@ -51,45 +89,107 @@ function EmptyState() {
       <Text className="mt-2 text-sm font-medium text-slate-500">
         Thêm nhân viên mới bằng nút bên dưới
       </Text>
-    </View>);
+    </View>
+  );
 }
 // ─── Main screen ─────────────────────────────────────────────────
 export default function StaffListScreen({ navigation }) {
-    const dispatch = useAppDispatch();
-    const { list, pagination, isLoading, isLoadingMore, error } = useAppSelector((s) => s.users);
-    useEffect(() => {
-        dispatch(fetchStaffThunk(undefined));
-    }, [dispatch]);
-    const handleRefresh = useCallback(() => {
-        dispatch(fetchStaffThunk(undefined));
-    }, [dispatch]);
-    const handleLoadMore = useCallback(() => {
-        if (!isLoadingMore && pagination.page < pagination.totalPages) {
-            dispatch(loadMoreStaffThunk(undefined));
-        }
-    }, [dispatch, isLoadingMore, pagination]);
-    const renderItem = useCallback(({ item }) => (<StaffCard user={item} onPress={() => navigation.navigate('StaffDetail', { userId: item._id })}/>), [navigation]);
-    const renderFooter = () => {
-        if (!isLoadingMore)
-            return null;
-        return (<View className="py-4">
-        <ActivityIndicator color={Colors.indigo600}/>
-      </View>);
-    };
-    return (<SafeAreaView className="flex-1 bg-page">
-      <View className="px-6 pb-2 pt-4">
-        <Text className="text-2xl font-extrabold text-slate-900">Nhân viên</Text>
+  const dispatch = useAppDispatch();
+  const insets = useSafeAreaInsets();
+  const { list, pagination, isLoading, isLoadingMore, error } = useAppSelector(
+    (s) => s.users,
+  );
+  const showBackButton = navigation.canGoBack();
+  useEffect(() => {
+    dispatch(fetchStaffThunk(undefined));
+  }, [dispatch]);
+  const handleRefresh = useCallback(() => {
+    dispatch(fetchStaffThunk(undefined));
+  }, [dispatch]);
+  const handleLoadMore = useCallback(() => {
+    if (!isLoadingMore && pagination.page < pagination.totalPages) {
+      dispatch(loadMoreStaffThunk(undefined));
+    }
+  }, [dispatch, isLoadingMore, pagination]);
+  const renderItem = useCallback(
+    ({ item }) => (
+      <StaffCard
+        user={item}
+        onPress={() => navigation.navigate("StaffDetail", { userId: item._id })}
+      />
+    ),
+    [navigation],
+  );
+  const renderFooter = () => {
+    if (!isLoadingMore) return null;
+    return (
+      <View className="py-4">
+        <ActivityIndicator color={Colors.indigo600} />
+      </View>
+    );
+  };
+  return (
+    <SafeAreaView className="flex-1 bg-page">
+      <View className="flex-row items-center px-6 pb-2 pt-4">
+        {showBackButton ? (
+          <Pressable
+            onPress={() => navigation.goBack()}
+            className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-white"
+            style={({ pressed }) => [
+              shadowFloating,
+              pressedStyleSmall(pressed),
+            ]}
+          >
+            <ArrowLeft size={20} color={Colors.slate700} weight="bold" />
+          </Pressable>
+        ) : null}
+        <Text className="text-2xl font-extrabold text-slate-900">
+          Nhân viên
+        </Text>
       </View>
 
-      {error && (<View className="mx-6 mb-2 rounded-xl bg-red-50 px-4 py-3">
+      {error && (
+        <View className="mx-6 mb-2 rounded-xl bg-red-50 px-4 py-3">
           <Text className="text-sm font-semibold text-red-600">{error}</Text>
-        </View>)}
+        </View>
+      )}
 
-      <FlatList data={list} renderItem={renderItem} keyExtractor={(item) => item._id} contentContainerStyle={[layoutContainer, { paddingHorizontal: 24 }]} contentContainerClassName="pb-24" ListEmptyComponent={!isLoading ? <EmptyState /> : null} refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[Colors.indigo600]} tintColor={Colors.indigo600}/>} onEndReached={handleLoadMore} onEndReachedThreshold={0.3} ListFooterComponent={renderFooter}/>
+      <FlatList
+        data={list}
+        renderItem={renderItem}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={[layoutContainer, { paddingHorizontal: 24 }]}
+        contentContainerClassName="pb-24"
+        ListEmptyComponent={!isLoading ? <EmptyState /> : null}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={handleRefresh}
+            colors={[Colors.indigo600]}
+            tintColor={Colors.indigo600}
+          />
+        }
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.3}
+        ListFooterComponent={renderFooter}
+      />
 
       {/* FAB — Admin only (this screen is already admin-gated) */}
-      <Pressable onPress={() => navigation.navigate('CreateStaff')} className="absolute bottom-28 right-6 h-14 w-14 items-center justify-center rounded-full bg-slate-900" style={({ pressed }) => [shadowCTA, pressedStyleSmall(pressed)]}>
-        <Plus size={24} color="#fff" weight="bold"/>
-      </Pressable>
-    </SafeAreaView>);
+      <View
+        style={{
+          position: "absolute",
+          right: 24,
+          bottom: Math.max(insets.bottom + 32, 40),
+        }}
+      >
+        <Pressable
+          onPress={() => navigation.navigate("CreateStaff")}
+          className="h-14 w-14 items-center justify-center rounded-full bg-slate-900"
+          style={({ pressed }) => [shadowCTA, pressedStyleSmall(pressed)]}
+        >
+          <Plus size={24} color="#fff" weight="bold" />
+        </Pressable>
+      </View>
+    </SafeAreaView>
+  );
 }

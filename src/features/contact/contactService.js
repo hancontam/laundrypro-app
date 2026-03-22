@@ -18,3 +18,13 @@ export async function getContacts(page = 1, limit = 10) {
     // data is wrapped in { success: true, data: { contacts, pagination } }
     return data.data;
 }
+/**
+ * PATCH /v1/contacts/admin/:id/status
+ * Update contact status (Admin)
+ */
+export async function updateContactStatus(contactId, status) {
+    const { data } = await apiClient.patch(`${CONTACT_BASE}/admin/${contactId}/status`, {
+        status,
+    });
+    return data.data;
+}

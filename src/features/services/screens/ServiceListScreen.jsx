@@ -1,10 +1,12 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, FlatList, Pressable, RefreshControl, Image, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Broom, CaretRight, Plus, Tag } from 'phosphor-react-native';
 import { useAppDispatch, useAppSelector } from '@/app/store';
-import { fetchServicesThunk } from '../servicesSlice';
+import { fetchCategoriesThunk, fetchServicesThunk } from '../servicesSlice';
 import { Colors, shadowCard, shadowCTA, pressedStyle, pressedStyleSmall, layoutContainer, } from '@/theme/tokens';
+import ListSearchBar from '@/components/ListSearchBar';
+import FilterChips from '@/components/FilterChips';
 // ─── Format helpers ──────────────────────────────────────────────
 function formatPrice(amount) {
     return amount.toLocaleString('vi-VN') + 'đ';
@@ -58,14 +60,62 @@ function EmptyState() {
 // ─── Main screen ─────────────────────────────────────────────────
 export default function ServiceListScreen({ navigation }) {
     const dispatch = useAppDispatch();
-    const { list, isLoading, error } = useAppSelector((s) => s.services);
+    const { list, categories, isLoading, error } = useAppSelector((s) => s.services);
     const userRole = useAppSelector((s) => s.auth.user?.role);
+    const isAdmin = userRole === 'admin';
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [visibilityFilter, setVisibilityFilter] = useState('all');
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            setDebouncedSearch(searchQuery.trim());
+        }, 250);
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
+    useEffect(() => {
+        dispatch(fetchCategoriesThunk());
+    }, [dispatch]);
     useEffect(() => {
         dispatch(fetchServicesThunk(undefined));
     }, [dispatch]);
     const handleRefresh = useCallback(() => {
         dispatch(fetchServicesThunk(undefined));
     }, [dispatch]);
+    const categoryOptions = useMemo(() => ([
+        { label: 'Tất cả', value: 'all' },
+        ...categories.map((category) => ({
+            label: category,
+            value: category,
+        })),
+    ]), [categories]);
+    const visibilityOptions = useMemo(() => ([
+        { label: 'Tất cả', value: 'all' },
+        { label: 'Đang hoạt động', value: 'active' },
+        { label: 'Đang ẩn', value: 'hidden' },
+    ]), []);
+    const filteredServices = useMemo(() => {
+        const normalizedSearch = debouncedSearch.toLowerCase();
+        return list.filter((service) => {
+            if (categoryFilter !== 'all' && service.category !== categoryFilter) {
+                return false;
+            }
+            if (visibilityFilter === 'active' && service.active === false) {
+                return false;
+            }
+            if (visibilityFilter === 'hidden' && service.active !== false) {
+                return false;
+            }
+            if (!normalizedSearch) {
+                return true;
+            }
+            const haystack = [service.name, service.category, service.unit]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+            return haystack.includes(normalizedSearch);
+        });
+    }, [categoryFilter, debouncedSearch, list, visibilityFilter]);
     const renderItem = useCallback(({ item }) => (<ServiceCard service={item} onPress={() => navigation.navigate('ServiceDetail', { serviceId: item._id })}/>), [navigation]);
     return (<SafeAreaView className="flex-1 bg-page">
       {/* Header */}
@@ -73,12 +123,29 @@ export default function ServiceListScreen({ navigation }) {
         <Text className="text-2xl font-extrabold text-slate-900">Dịch vụ</Text>
       </View>
 
+      <View className="px-6 pb-4">
+        <ListSearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Tìm theo tên dịch vụ hoặc danh mục..." isLoading={isLoading}/>
+        <View className="mt-3">
+          <FilterChips options={categoryOptions} value={categoryFilter} onChange={setCategoryFilter}/>
+        </View>
+        {isAdmin && (<View className="mt-3">
+            <FilterChips options={visibilityOptions} value={visibilityFilter} onChange={setVisibilityFilter}/>
+          </View>)}
+      </View>
+
       {/* Error */}
       {error && (<View className="mx-6 mb-2 rounded-xl bg-red-50 px-4 py-3">
           <Text className="text-sm font-semibold text-red-600">{error}</Text>
         </View>)}
 
-      <FlatList data={list} renderItem={renderItem} keyExtractor={(item) => item._id} contentContainerStyle={[layoutContainer, { paddingHorizontal: 24 }]} contentContainerClassName="pb-24" ListEmptyComponent={!isLoading ? <EmptyState /> : null} refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[Colors.indigo600]} tintColor={Colors.indigo600}/>}/>
+      <FlatList data={filteredServices} renderItem={renderItem} keyExtractor={(item) => item._id} contentContainerStyle={[layoutContainer, { paddingHorizontal: 24 }]} contentContainerClassName="pb-24" ListEmptyComponent={!isLoading ? (searchQuery.trim() || categoryFilter !== 'all' || visibilityFilter !== 'all' ? (<View className="flex-1 items-center justify-center py-20">
+              <Text className="text-lg font-extrabold text-slate-900">
+                Không tìm thấy dịch vụ phù hợp
+              </Text>
+              <Text className="mt-2 text-sm font-medium text-slate-500">
+                Thử đổi từ khóa hoặc bộ lọc để xem thêm kết quả.
+              </Text>
+            </View>) : <EmptyState />) : null} refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[Colors.indigo600]} tintColor={Colors.indigo600}/>}/>
 
       {/* FAB — Admin only */}
       {userRole === 'admin' && (<Pressable onPress={() => navigation.navigate('ServiceForm', undefined)} className="absolute bottom-28 right-6 h-14 w-14 items-center justify-center rounded-full bg-slate-900" style={({ pressed }) => [shadowCTA, pressedStyleSmall(pressed)]}>

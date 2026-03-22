@@ -3,6 +3,7 @@ import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { Receipt, CaretRight } from "phosphor-react-native";
 import PaymentStatusBadge from "./PaymentStatusBadge";
 import { Colors, shadowCard, pressedStyle } from "@/theme/tokens";
+import { PAYMENT_METHOD_LABEL, PAYMENT_STATUS_ACTION_LABEL, getPaymentNextStatuses } from "@/features/payments/paymentMeta";
 function formatPrice(amount) {
     return amount.toLocaleString("vi-VN") + "đ";
 }
@@ -15,29 +16,11 @@ function formatDate(iso) {
         minute: "2-digit",
     });
 }
-const PAYMENT_METHOD_LABEL = {
-    cash: "Tiền mặt",
-    momo: "MoMo",
-    vnpay: "VNPay",
-    bank: "Chuyển khoản",
-};
-const STATUS_ACTIONS = {
-    pending: ["paid", "failed", "refunded"],
-    paid: ["refunded"],
-    failed: ["pending", "paid", "refunded"],
-    refunded: [],
-};
-const STATUS_ACTION_LABEL = {
-    pending: "Chờ",
-    paid: "Đã thanh toán",
-    failed: "Thất bại",
-    refunded: "Hoàn tiền",
-};
-export default function PaymentHistoryItem({ payment, onPress, showStatusActions = false, isUpdating = false, onStatusChange, }) {
+export default function PaymentHistoryItem({ payment, onPress, showStatusActions = false, isUpdating = false, onStatusChange, canRefund = false, }) {
     const customerLabel = payment.customerName ||
         payment.customerPhone ||
         (payment.customerId ? `Khách #${payment.customerId.slice(-6).toUpperCase()}` : null);
-    const nextStatuses = STATUS_ACTIONS[payment.status];
+    const nextStatuses = getPaymentNextStatuses(payment.status, { canRefund });
     return (<Pressable onPress={() => onPress(payment)} className="mb-4 flex-row items-center rounded-2xl border border-slate-100 bg-white p-4" style={({ pressed }) => [shadowCard, pressedStyle(pressed)]}>
       <View className="mr-4 h-12 w-12 items-center justify-center rounded-full bg-indigo-50">
         <Receipt size={24} color={Colors.indigo600} weight="fill"/>
@@ -63,7 +46,7 @@ export default function PaymentHistoryItem({ payment, onPress, showStatusActions
             {customerLabel}
           </Text>)}
         <Text className="mt-1 text-xs font-semibold text-indigo-600">
-          {PAYMENT_METHOD_LABEL[payment.method] || payment.method.toUpperCase()}
+          {PAYMENT_METHOD_LABEL[payment.method] || payment.method}
         </Text>
 
         {showStatusActions && (<View className="mt-3">
@@ -78,7 +61,7 @@ export default function PaymentHistoryItem({ payment, onPress, showStatusActions
               </View>) : nextStatuses.length > 0 ? (<View className="flex-row flex-wrap gap-2">
                 {nextStatuses.map((status) => (<Pressable key={status} onPress={() => onStatusChange?.(payment, status)} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2" style={({ pressed }) => pressedStyle(pressed)}>
                     <Text className="text-xs font-bold text-slate-700">
-                      {STATUS_ACTION_LABEL[status]}
+                      {PAYMENT_STATUS_ACTION_LABEL[status]}
                     </Text>
                   </Pressable>))}
               </View>) : (<Text className="text-xs font-medium text-slate-400">

@@ -7,6 +7,16 @@ import { useAppDispatch, useAppSelector } from '@/app/store';
 import { clearError, resetPasswordWithOtpThunk } from '../authSlice';
 import { Colors, layoutContainer, labelStyle, pressedStyle, pressedStyleSmall, shadowCTA, shadowCard, shadowFloating, } from '@/theme/tokens';
 const OTP_LENGTH = 6;
+function getOtpErrorMessage(error) {
+    const code = error?.code;
+    if (code === 'auth/invalid-verification-code') {
+        return 'Mã OTP không đúng. Vui lòng kiểm tra và nhập lại.';
+    }
+    if (code === 'auth/code-expired') {
+        return 'Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.';
+    }
+    return 'Không thể xác thực OTP. Vui lòng thử lại.';
+}
 export default function ForgotPasswordOtpScreen({ navigation, route, }) {
     const { phone, confirmation } = route.params;
     const dispatch = useAppDispatch();
@@ -14,6 +24,7 @@ export default function ForgotPasswordOtpScreen({ navigation, route, }) {
     const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
     const [verifiedIdToken, setVerifiedIdToken] = useState(null);
     const [localLoading, setLocalLoading] = useState(false);
+    const [localError, setLocalError] = useState(null);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -32,6 +43,9 @@ export default function ForgotPasswordOtpScreen({ navigation, route, }) {
         const newOtp = [...otp];
         newOtp[index] = value.slice(-1);
         setOtp(newOtp);
+        if (localError) {
+            setLocalError(null);
+        }
         if (value && index < OTP_LENGTH - 1) {
             inputRefs.current[index + 1]?.focus();
         }
@@ -49,6 +63,7 @@ export default function ForgotPasswordOtpScreen({ navigation, route, }) {
         if (code.length !== OTP_LENGTH || verifiedIdToken)
             return;
         dispatch(clearError());
+        setLocalError(null);
         setLocalLoading(true);
         try {
             await confirmation.confirm(code);
@@ -62,7 +77,7 @@ export default function ForgotPasswordOtpScreen({ navigation, route, }) {
             await auth().signOut();
         }
         catch (err) {
-            console.error('Forgot password verify OTP error:', err.message);
+            setLocalError(getOtpErrorMessage(err));
         }
         finally {
             setLocalLoading(false);
@@ -106,8 +121,8 @@ export default function ForgotPasswordOtpScreen({ navigation, route, }) {
             </Text>
           </View>
 
-          {error && (<View className="mb-4 rounded-xl bg-red-50 px-4 py-3">
-              <Text className="text-sm font-semibold text-red-600">{error}</Text>
+          {(localError || error) && (<View className="mb-4 rounded-xl bg-red-50 px-4 py-3">
+              <Text className="text-sm font-semibold text-red-600">{localError || error}</Text>
             </View>)}
 
           {!verifiedIdToken ? (<>

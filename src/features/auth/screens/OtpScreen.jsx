@@ -8,16 +8,30 @@ import { useAppDispatch, useAppSelector } from '@/app/store';
 import { loginWithOtpThunk, getProfileThunk, clearError } from '../authSlice';
 import { Colors, shadowCTA, shadowFloating, pressedStyle, pressedStyleSmall, layoutContainer, } from '@/theme/tokens';
 const OTP_LENGTH = 6;
+function getOtpErrorMessage(error) {
+    const code = error?.code;
+    if (code === 'auth/invalid-verification-code') {
+        return 'Mã OTP không đúng. Vui lòng kiểm tra và nhập lại.';
+    }
+    if (code === 'auth/code-expired') {
+        return 'Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.';
+    }
+    return 'Không thể xác thực OTP. Vui lòng thử lại.';
+}
 export default function OtpScreen({ navigation, route }) {
     const { phone, confirmation } = route.params;
     const dispatch = useAppDispatch();
     const { isLoading, error } = useAppSelector((state) => state.auth);
     const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
+    const [localError, setLocalError] = useState(null);
     const inputRefs = useRef([]);
     const handleOtpChange = (value, index) => {
         const newOtp = [...otp];
         newOtp[index] = value.slice(-1);
         setOtp(newOtp);
+        if (localError) {
+            setLocalError(null);
+        }
         if (value && index < OTP_LENGTH - 1) {
             inputRefs.current[index + 1]?.focus();
         }
@@ -37,6 +51,7 @@ export default function OtpScreen({ navigation, route }) {
         if (!confirmation || code.length !== OTP_LENGTH)
             return;
         dispatch(clearError());
+        setLocalError(null);
         try {
             await confirmation.confirm(code);
             // Get the current user from auth() after confirmation succeeds
@@ -50,7 +65,7 @@ export default function OtpScreen({ navigation, route }) {
             }
         }
         catch (err) {
-            console.error('Verify OTP error:', err.message);
+            setLocalError(getOtpErrorMessage(err));
         }
     }, [confirmation, dispatch]);
     return (<SafeAreaView className="flex-1 bg-page">
@@ -78,8 +93,8 @@ export default function OtpScreen({ navigation, route }) {
           </View>
 
           {/* ── Error ── */}
-          {error && (<View className="mb-4 rounded-xl bg-red-50 px-4 py-3">
-              <Text className="text-sm font-semibold text-red-600">{error}</Text>
+          {(localError || error) && (<View className="mb-4 rounded-xl bg-red-50 px-4 py-3">
+              <Text className="text-sm font-semibold text-red-600">{localError || error}</Text>
             </View>)}
 
           {/* ── §5.3 OTP Input cells ── */}

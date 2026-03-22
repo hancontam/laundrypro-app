@@ -42,7 +42,6 @@ const HomeStack = createNativeStackNavigator();
 const OrdersStack = createNativeStackNavigator();
 const ServicesStack = createNativeStackNavigator();
 const ProfileStack = createNativeStackNavigator();
-const PaymentsStack = createNativeStackNavigator();
 const ManageStack = createNativeStackNavigator();
 const sharedStackOptions = {
     headerShown: false,
@@ -119,9 +118,7 @@ function ManageRow({ icon: Icon, title, description, onPress, }) {
 }
 function HomeScreen({ navigation }) {
     const { user } = useAppSelector((state) => state.auth);
-    const isAdmin = user?.role === "admin";
     const isStaffOrAdmin = user?.role === "staff" || user?.role === "admin";
-    const isCustomer = user?.role === "customer";
     return (<SafeAreaView className="flex-1 bg-page">
       <ScrollView contentContainerStyle={layoutContainer} contentContainerClassName="px-6 pb-28 pt-4" showsVerticalScrollIndicator={false}>
         <LinearGradient colors={[Colors.indigo600, Colors.indigo500]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="mb-6 rounded-[28px] px-5 py-6" style={shadowFloating}>
@@ -147,13 +144,11 @@ function HomeScreen({ navigation }) {
           <ShortcutCard icon={ClipboardText} title="Đơn hàng" subtitle="Xem danh sách đơn và theo dõi thanh toán." onPress={() => navigation.navigate("OrdersTab")}/>
           <ShortcutCard icon={Broom} title="Dịch vụ" subtitle="Xem bảng giá và quản lý danh mục dịch vụ." onPress={() => navigation.navigate("ServicesTab")}/>
 
-          {isCustomer && (<ShortcutCard icon={CreditCard} title="Thanh toán" subtitle="Theo dõi lịch sử và trạng thái giao dịch." onPress={() => navigation.navigate("PaymentsTab")}/>)}
-
           {isStaffOrAdmin && (<ShortcutCard icon={Plus} title="Tạo đơn mới" subtitle="Khởi tạo đơn giặt sấy và thu tiền nhanh hơn." onPress={() => navigation.navigate("OrdersTab", { screen: "CreateOrder" })}/>)}
 
-          {isAdmin && (<ShortcutCard icon={UsersThree} title="Quản trị" subtitle="Khách hàng, nhân viên, thống kê và liên hệ." onPress={() => navigation.navigate("ManageTab")}/>)}
+          {isStaffOrAdmin && (<ShortcutCard icon={UsersThree} title="Quản trị" subtitle="Khách hàng, thanh toán và các công cụ quản lý phù hợp với quyền của bạn." onPress={() => navigation.navigate("ManageTab")}/>)}
 
-          {!isCustomer && (<ShortcutCard icon={User} title="Tài khoản" subtitle="Cập nhật thông tin cá nhân và tùy chọn bảo mật." onPress={() => navigation.navigate("ProfileTab")}/>)}
+          <ShortcutCard icon={User} title="Tài khoản" subtitle="Cập nhật thông tin cá nhân và tùy chọn bảo mật." onPress={() => navigation.navigate("ProfileTab")}/>
         </View>
 
         <View className="rounded-2xl border border-slate-100 bg-white p-5" style={shadowCard}>
@@ -181,6 +176,50 @@ function HomeScreen({ navigation }) {
     </SafeAreaView>);
 }
 function ManageHubScreen({ navigation }) {
+    const role = useAppSelector((state) => state.auth.user?.role);
+    const manageItems = [
+        {
+            key: "dashboard",
+            icon: ChartBar,
+            title: "Thống kê",
+            description: "Theo dõi doanh thu, đơn hàng và tổng quan hoạt động.",
+            screen: "Dashboard",
+            roles: ["admin"],
+        },
+        {
+            key: "customers",
+            icon: UsersThree,
+            title: "Khách hàng",
+            description: "Xem danh sách, chi tiết và cập nhật hồ sơ khách hàng.",
+            screen: "CustomerList",
+            roles: ["admin", "staff"],
+        },
+        {
+            key: "staff",
+            icon: User,
+            title: "Nhân viên",
+            description: "Quản lý tài khoản nhân viên và quyền truy cập.",
+            screen: "StaffList",
+            roles: ["admin"],
+        },
+        {
+            key: "payment-history",
+            icon: CreditCard,
+            title: "Lịch sử thanh toán",
+            description: "Xem toàn bộ giao dịch thanh toán của khách hàng.",
+            screen: "PaymentHistory",
+            roles: ["admin", "staff"],
+        },
+        {
+            key: "contact-requests",
+            icon: ClipboardText,
+            title: "Yêu cầu liên hệ",
+            description: "Theo dõi phản hồi và yêu cầu mới từ khách hàng.",
+            screen: "ContactRequestList",
+            roles: ["admin"],
+        },
+    ];
+    const visibleManageItems = manageItems.filter((item) => item.roles.includes(role));
     return (<SafeAreaView className="flex-1 bg-page">
       <ScrollView contentContainerStyle={layoutContainer} contentContainerClassName="px-6 pb-28 pt-4" showsVerticalScrollIndicator={false}>
         <View className="mb-6">
@@ -192,11 +231,7 @@ function ManageHubScreen({ navigation }) {
           </Text>
         </View>
 
-        <ManageRow icon={ChartBar} title="Thống kê" description="Theo dõi doanh thu, đơn hàng và tổng quan hoạt động." onPress={() => navigation.navigate("Dashboard")}/>
-        <ManageRow icon={UsersThree} title="Khách hàng" description="Xem danh sách, chi tiết và cập nhật hồ sơ khách hàng." onPress={() => navigation.navigate("CustomerList")}/>
-        <ManageRow icon={User} title="Nhân viên" description="Quản lý tài khoản nhân viên và quyền truy cập." onPress={() => navigation.navigate("StaffList")}/>
-        <ManageRow icon={CreditCard} title="Lịch sử thanh toán" description="Xem toàn bộ giao dịch thanh toán của khách hàng." onPress={() => navigation.navigate("PaymentHistory")}/>
-        <ManageRow icon={ClipboardText} title="Yêu cầu liên hệ" description="Theo dõi phản hồi và yêu cầu mới từ khách hàng." onPress={() => navigation.navigate("ContactRequestList")}/>
+        {visibleManageItems.map((item) => (<ManageRow key={item.key} icon={item.icon} title={item.title} description={item.description} onPress={() => navigation.navigate(item.screen)}/>))}
       </ScrollView>
     </SafeAreaView>);
 }
@@ -237,41 +272,43 @@ function ServicesNavigator() {
       {isStaffOrAdmin && (<ServicesStack.Screen name="ServiceForm" component={ServiceFormScreen}/>)}
     </ServicesStack.Navigator>);
 }
-function PaymentsNavigator() {
-    return (<PaymentsStack.Navigator screenOptions={sharedStackOptions}>
-      <PaymentsStack.Screen name="PaymentHistory" component={PaymentHistoryScreen}/>
-      <PaymentsStack.Screen name="PaymentDetail" component={PaymentDetailScreen}/>
-    </PaymentsStack.Navigator>);
-}
 function ProfileNavigator() {
+    const role = useAppSelector((state) => state.auth.user?.role);
+    const canManageOwnProfile = role !== "admin";
     return (<ProfileStack.Navigator screenOptions={sharedStackOptions}>
       <ProfileStack.Screen name="Profile" component={ProfileScreen}/>
-      <ProfileStack.Screen name="EditProfile" component={EditProfileScreen}/>
-      <ProfileStack.Screen name="ChangePassword" component={ChangePasswordScreen}/>
-      <ProfileStack.Screen name="PaymentHistory" component={PaymentHistoryScreen}/>
-      <ProfileStack.Screen name="PaymentDetail" component={PaymentDetailScreen}/>
+      {canManageOwnProfile && (<>
+          <ProfileStack.Screen name="EditProfile" component={EditProfileScreen}/>
+          <ProfileStack.Screen name="ChangePassword" component={ChangePasswordScreen}/>
+        </>)}
     </ProfileStack.Navigator>);
 }
 function ManageNavigator() {
+    const { user } = useAppSelector((state) => state.auth);
+    const isAdmin = user?.role === "admin";
+    const isStaffOrAdmin = user?.role === "staff" || user?.role === "admin";
     return (<ManageStack.Navigator screenOptions={sharedStackOptions}>
       <ManageStack.Screen name="ManageHub" component={ManageHubScreen}/>
-      <ManageStack.Screen name="Dashboard" component={DashboardScreen}/>
-      <ManageStack.Screen name="CustomerList" component={CustomerListScreen}/>
-      <ManageStack.Screen name="CustomerDetail" component={CustomerDetailScreen}/>
-      <ManageStack.Screen name="CustomerForm" component={CustomerFormScreen}/>
-      <ManageStack.Screen name="StaffList" component={StaffListScreen}/>
-      <ManageStack.Screen name="StaffDetail" component={StaffDetailScreen}/>
-      <ManageStack.Screen name="CreateStaff" component={CreateStaffScreen}/>
-      <ManageStack.Screen name="EditStaff" component={EditStaffScreen}/>
-      <ManageStack.Screen name="PaymentHistory" component={PaymentHistoryScreen}/>
-      <ManageStack.Screen name="PaymentDetail" component={PaymentDetailScreen}/>
-      <ManageStack.Screen name="ContactRequestList" component={ContactRequestListScreen}/>
+      {isAdmin && (<ManageStack.Screen name="Dashboard" component={DashboardScreen}/>)}
+      {isStaffOrAdmin && (<>
+          <ManageStack.Screen name="CustomerList" component={CustomerListScreen}/>
+          <ManageStack.Screen name="CustomerDetail" component={CustomerDetailScreen}/>
+          <ManageStack.Screen name="CustomerForm" component={CustomerFormScreen}/>
+          <ManageStack.Screen name="PaymentHistory" component={PaymentHistoryScreen} initialParams={{ scope: "all" }}/>
+          <ManageStack.Screen name="PaymentDetail" component={PaymentDetailScreen}/>
+        </>)}
+      {isAdmin && (<>
+          <ManageStack.Screen name="StaffList" component={StaffListScreen}/>
+          <ManageStack.Screen name="StaffDetail" component={StaffDetailScreen}/>
+          <ManageStack.Screen name="CreateStaff" component={CreateStaffScreen}/>
+          <ManageStack.Screen name="EditStaff" component={EditStaffScreen}/>
+          <ManageStack.Screen name="ContactRequestList" component={ContactRequestListScreen}/>
+        </>)}
     </ManageStack.Navigator>);
 }
 function MainTabsNavigator() {
     const { user } = useAppSelector((state) => state.auth);
-    const isAdmin = user?.role === "admin";
-    const isCustomer = user?.role === "customer";
+    const isStaffOrAdmin = user?.role === "staff" || user?.role === "admin";
     return (<Tab.Navigator screenOptions={{
             headerShown: false,
             tabBarShowLabel: false,
@@ -294,12 +331,7 @@ function MainTabsNavigator() {
             tabBarStyle: resolveTabBarStyle(route, ["ServiceDetail", "ServiceForm"]),
         })}/>
 
-      {isCustomer && (<Tab.Screen name="PaymentsTab" component={PaymentsNavigator} options={({ route }) => ({
-                tabBarIcon: ({ focused }) => (<TabItem icon={CreditCard} label="Thanh toán" focused={focused}/>),
-                tabBarStyle: resolveTabBarStyle(route, ["PaymentDetail"]),
-            })}/>)}
-
-      {isAdmin && (<Tab.Screen name="ManageTab" component={ManageNavigator} options={({ route }) => ({
+      {isStaffOrAdmin && (<Tab.Screen name="ManageTab" component={ManageNavigator} options={({ route }) => ({
                 tabBarIcon: ({ focused }) => (<TabItem icon={UsersThree} label="Quản trị" focused={focused}/>),
                 tabBarStyle: resolveTabBarStyle(route, [
                     "Dashboard",
@@ -318,12 +350,7 @@ function MainTabsNavigator() {
 
       <Tab.Screen name="ProfileTab" component={ProfileNavigator} options={({ route }) => ({
             tabBarIcon: ({ focused }) => (<TabItem icon={User} label="Cá nhân" focused={focused}/>),
-            tabBarStyle: resolveTabBarStyle(route, [
-                "EditProfile",
-                "ChangePassword",
-                "PaymentHistory",
-                "PaymentDetail",
-            ]),
+            tabBarStyle: resolveTabBarStyle(route, ["EditProfile", "ChangePassword"]),
         })}/>
     </Tab.Navigator>);
 }

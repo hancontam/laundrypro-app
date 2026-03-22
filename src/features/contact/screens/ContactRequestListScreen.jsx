@@ -1,10 +1,9 @@
 import React, { useEffect, useCallback } from "react";
-import { View, Text, FlatList, ActivityIndicator, RefreshControl, Pressable, // Assuming we'll need this for navigation later maybe
- } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, RefreshControl, Pressable, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, ChatCircleText, User, EnvelopeSimple, } from "phosphor-react-native";
 import { useAppDispatch, useAppSelector } from "@/app/store";
-import { fetchContactsThunk, loadMoreContactsThunk } from "../contactSlice";
+import { fetchContactsThunk, loadMoreContactsThunk, updateContactStatusThunk } from "../contactSlice";
 import { Colors, shadowCard, shadowFloating, pressedStyleSmall, layoutContainer, } from "@/theme/tokens";
 // ─── Format helper ───────────────────────────────────────────────
 function formatDate(iso) {
@@ -17,21 +16,35 @@ function formatDate(iso) {
         minute: "2-digit",
     });
 }
+const CONTACT_STATUS_META = {
+    new: {
+        label: "Mới",
+        bg: "bg-indigo-50",
+        text: "text-indigo-600",
+    },
+    read: {
+        label: "Đã xem",
+        bg: "bg-slate-100",
+        text: "text-slate-500",
+    },
+    replied: {
+        label: "Đã phản hồi",
+        bg: "bg-green-50",
+        text: "text-green-700",
+    },
+};
+const CONTACT_STATUS_OPTIONS = ["new", "read", "replied"];
 // ─── Contact Request Card ────────────────────────────────────────
-function ContactRequestCard({ request }) {
-    const isRead = request.status === "read" || request.status === "replied";
+function ContactRequestCard({ request, isUpdating = false, onStatusChange }) {
+    const statusMeta = CONTACT_STATUS_META[request.status] || CONTACT_STATUS_META.new;
     return (<View className="mb-4 rounded-2xl border border-slate-100 bg-white p-5" style={shadowCard}>
       <View className="mb-3 flex-row items-center justify-between">
         <Text className="text-xs font-bold text-slate-400">
           #{request._id.slice(-8).toUpperCase()}
         </Text>
-        <View className={`rounded-lg px-2.5 py-1 ${isRead ? "bg-slate-100" : "bg-indigo-50"}`}>
-          <Text className={`text-xs font-bold ${isRead ? "text-slate-500" : "text-indigo-600"}`}>
-            {request.status === "new"
-            ? "Mới"
-            : request.status === "read"
-                ? "Đã xem"
-                : "Đã phản hồi"}
+        <View className={`rounded-lg px-2.5 py-1 ${statusMeta.bg}`}>
+          <Text className={`text-xs font-bold ${statusMeta.text}`}>
+            {statusMeta.label}
           </Text>
         </View>
       </View>
@@ -62,6 +75,30 @@ function ContactRequestCard({ request }) {
         </Text>
       </View>
 
+      <View className="mb-4 border-t border-slate-100 pt-4">
+        <Text className="mb-2 text-xs font-bold uppercase tracking-[1px] text-slate-400">
+          Cập nhật trạng thái
+        </Text>
+        {isUpdating ? (<View className="flex-row items-center">
+            <ActivityIndicator size="small" color={Colors.indigo600}/>
+            <Text className="ml-2 text-xs font-medium text-slate-500">
+              Đang cập nhật...
+            </Text>
+          </View>) : (<View className="flex-row flex-wrap gap-2">
+            {CONTACT_STATUS_OPTIONS.map((status) => {
+            const optionMeta = CONTACT_STATUS_META[status] || CONTACT_STATUS_META.new;
+            const isActive = request.status === status;
+            return (<Pressable key={status} onPress={() => onStatusChange?.(request, status)} disabled={isActive} className={`rounded-full border px-3 py-2 ${isActive
+                    ? `${optionMeta.bg} border-transparent`
+                    : "border-slate-200 bg-white"}`} style={({ pressed }) => pressedStyleSmall(pressed)}>
+                  <Text className={`text-xs font-bold ${isActive ? optionMeta.text : "text-slate-700"}`}>
+                    {optionMeta.label}
+                  </Text>
+                </Pressable>);
+        })}
+          </View>)}
+      </View>
+
       <View className="flex-row items-center justify-end pt-1">
         <Text className="text-xs font-medium text-slate-400">
           {formatDate(request.createdAt)}
@@ -86,7 +123,7 @@ function EmptyState() {
 // ─── Main Screen ─────────────────────────────────────────────────
 export default function ContactRequestListScreen({ navigation }) {
     const dispatch = useAppDispatch();
-    const { list, pagination, isLoading, isLoadingMore, error } = useAppSelector((state) => state.contact);
+    const { list, pagination, isLoading, isLoadingMore, updatingContactId, error } = useAppSelector((state) => state.contact);
     // Protect route just in case
     const { user } = useAppSelector((state) => state.auth);
     const isAdmin = user?.role === "admin";
@@ -103,6 +140,27 @@ export default function ContactRequestListScreen({ navigation }) {
             dispatch(loadMoreContactsThunk());
         }
     }, [dispatch, isLoadingMore, pagination]);
+    const handleStatusChange = useCallback((request, status) => {
+        if (request.status === status) {
+            return;
+        }
+        const nextLabel = CONTACT_STATUS_META[status]?.label || status;
+        Alert.alert("Cập nhật trạng thái", `Bạn muốn chuyển liên hệ này sang "${nextLabel}"?`, [
+            { text: "Hủy", style: "cancel" },
+            {
+                text: "Xác nhận",
+                onPress: async () => {
+                    const result = await dispatch(updateContactStatusThunk({
+                        contactId: request._id,
+                        status,
+                    }));
+                    if (updateContactStatusThunk.rejected.match(result)) {
+                        Alert.alert("Không thể cập nhật", result.payload || "Cập nhật trạng thái liên hệ thất bại.");
+                    }
+                },
+            },
+        ]);
+    }, [dispatch]);
     if (!isAdmin) {
         return (<SafeAreaView className="flex-1 bg-page items-center justify-center">
         <Text className="text-slate-500 font-medium">
@@ -134,6 +192,6 @@ export default function ContactRequestListScreen({ navigation }) {
         </View>)}
 
       {/* List */}
-      <FlatList data={list} renderItem={({ item }) => <ContactRequestCard request={item}/>} keyExtractor={(item) => item._id} contentContainerStyle={[layoutContainer, { paddingHorizontal: 24 }]} contentContainerClassName="pb-12 pt-4" ListEmptyComponent={!isLoading ? <EmptyState /> : null} refreshControl={<RefreshControl refreshing={isLoading && !isLoadingMore} onRefresh={handleRefresh} colors={[Colors.indigo600]} tintColor={Colors.indigo600}/>} onEndReached={handleLoadMore} onEndReachedThreshold={0.3} ListFooterComponent={renderFooter}/>
+      <FlatList data={list} renderItem={({ item }) => (<ContactRequestCard request={item} isUpdating={updatingContactId === item._id} onStatusChange={handleStatusChange}/>)} keyExtractor={(item) => item._id} contentContainerStyle={[layoutContainer, { paddingHorizontal: 24 }]} contentContainerClassName="pb-12 pt-4" ListEmptyComponent={!isLoading ? <EmptyState /> : null} refreshControl={<RefreshControl refreshing={isLoading && !isLoadingMore} onRefresh={handleRefresh} colors={[Colors.indigo600]} tintColor={Colors.indigo600}/>} onEndReached={handleLoadMore} onEndReachedThreshold={0.3} ListFooterComponent={renderFooter}/>
     </SafeAreaView>);
 }

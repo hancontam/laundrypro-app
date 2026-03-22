@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, Dimensions } from "react-native";
 import { PieChart } from "react-native-chart-kit";
 import { Colors, shadowCard } from "@/theme/tokens";
+import { ORDER_STATUS_META } from "@/features/orders/orderMeta";
 export default function OrderStatisticsChart({ data }) {
     if (!data || data.length === 0) {
         return (<View className="mb-6 rounded-2xl border border-slate-100 bg-white p-6" style={shadowCard}>
@@ -14,22 +15,10 @@ export default function OrderStatisticsChart({ data }) {
       </View>);
     }
     const screenWidth = Dimensions.get("window").width;
-    const colorMap = {
-        pending: "#F59E0B", // amber-500
-        processing: "#3B82F6", // blue-500
-        completed: Colors.green500,
-        cancelled: Colors.red600,
-    };
-    const labelMap = {
-        pending: "Chờ xử lý",
-        processing: "Đang xử lý",
-        completed: "Hoàn thành",
-        cancelled: "Đã huỷ",
-    };
     const chartData = data.map((item) => ({
-        name: labelMap[item._id.toLowerCase()] || item._id,
+        name: ORDER_STATUS_META[item._id.toLowerCase()]?.label || item._id,
         population: item.count,
-        color: colorMap[item._id.toLowerCase()] || Colors.slate500,
+        color: ORDER_STATUS_META[item._id.toLowerCase()]?.chartColor || Colors.slate500,
         legendFontColor: Colors.slate700,
         legendFontSize: 12,
     }));

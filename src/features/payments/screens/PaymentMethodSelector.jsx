@@ -9,7 +9,5 @@ export default function PaymentMethodSelector({ selectedMethod, onSelect, }) {
       </Text>
 
       <PaymentMethodButton method="cash" label="Tiền mặt" description="Thu tiền mặt trực tiếp từ khách hàng" isSelected={selectedMethod === "cash"} onPress={onSelect}/>
-
-      <PaymentMethodButton method="momo" label="Ví MoMo" description="Tạo mã QR / Link thanh toán qua MoMo" isSelected={selectedMethod === "momo"} onPress={onSelect}/>
     </View>);
 }

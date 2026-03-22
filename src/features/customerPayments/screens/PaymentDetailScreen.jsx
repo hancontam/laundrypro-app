@@ -5,6 +5,7 @@ import { Colors, shadowCard } from "@/theme/tokens";
 import { useAppSelector } from "@/app/store";
 import PaymentStatusBadge from "../components/PaymentStatusBadge";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { PAYMENT_METHOD_LABEL } from "@/features/payments/paymentMeta";
 function formatPrice(amount) {
     return amount.toLocaleString("vi-VN") + "đ";
 }
@@ -19,12 +20,6 @@ function formatDate(iso) {
         minute: "2-digit",
     });
 }
-const METHOD_LABEL = {
-    cash: "Tiền mặt",
-    momo: "Ví MoMo",
-    vnpay: "VNPay",
-    bank: "Chuyển khoản",
-};
 export default function PaymentDetailScreen({ navigation }) {
     const { selectedPayment } = useAppSelector((state) => state.customerPayments);
     if (!selectedPayment) {
@@ -97,10 +92,10 @@ export default function PaymentDetailScreen({ navigation }) {
                 Phương thức
               </Text>
             </View>
-            <Text className="text-sm font-bold text-slate-900">
-              {METHOD_LABEL[method] || method.toUpperCase()}
-            </Text>
-          </View>
+              <Text className="text-sm font-bold text-slate-900">
+                {PAYMENT_METHOD_LABEL[method] || method}
+              </Text>
+            </View>
 
           <View className="mb-4 flex-row justify-between border-b border-slate-100 pb-4">
             <View className="flex-row items-center">

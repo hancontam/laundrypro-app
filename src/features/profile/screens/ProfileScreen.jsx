@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, ScrollView, Pressable, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { UserCircle, PencilSimple, LockKey, SignOut, CaretRight, Receipt, } from "phosphor-react-native";
+import { UserCircle, PencilSimple, LockKey, SignOut, CaretRight, } from "phosphor-react-native";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { logoutThunk } from "@/features/auth/authSlice";
 import { Colors, shadowCard, pressedStyle, layoutContainer, } from "@/theme/tokens";
@@ -19,6 +19,7 @@ function MenuRow({ icon: Icon, label, onPress, color = Colors.slate700, hideArro
 export default function ProfileScreen({ navigation }) {
     const dispatch = useAppDispatch();
     const { user } = useAppSelector((state) => state.auth);
+    const isAdmin = user?.role === "admin";
     const handleLogout = () => {
         dispatch(logoutThunk());
     };
@@ -52,12 +53,10 @@ export default function ProfileScreen({ navigation }) {
         </View>
 
         {/* Menu Items */}
-        <View className="mb-6 rounded-2xl border border-slate-100 bg-white px-4" style={shadowCard}>
-          <MenuRow icon={PencilSimple} label="Chỉnh sửa thông tin" onPress={() => navigation.navigate("EditProfile")}/>
-          {user.hasPassword && (<MenuRow icon={LockKey} label="Đổi mật khẩu" onPress={() => navigation.navigate("ChangePassword")}/>)}
-
-          {user.role === "customer" && (<MenuRow icon={Receipt} label="Lịch sử thanh toán" onPress={() => navigation.navigate("PaymentHistory")}/>)}
-        </View>
+        {!isAdmin && (<View className="mb-6 rounded-2xl border border-slate-100 bg-white px-4" style={shadowCard}>
+            <MenuRow icon={PencilSimple} label="Chỉnh sửa thông tin" onPress={() => navigation.navigate("EditProfile")}/>
+            {user.hasPassword && (<MenuRow icon={LockKey} label="Đổi mật khẩu" onPress={() => navigation.navigate("ChangePassword")}/>)}
+          </View>)}
 
         {/* Logout */}
         <View className="rounded-2xl border border-slate-100 bg-white px-4" style={shadowCard}>

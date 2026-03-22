@@ -15,6 +15,23 @@ const initialState = {
     isLoadingMore: false,
     error: null,
 };
+function dedupeOrders(orders = []) {
+    const seen = new Set();
+    return orders.filter((order) => {
+        if (!order?._id || seen.has(order._id)) {
+            return false;
+        }
+        seen.add(order._id);
+        return true;
+    });
+}
+function upsertOrderAtTop(orders = [], incomingOrder) {
+    if (!incomingOrder?._id) {
+        return orders;
+    }
+    const nextOrders = orders.filter((order) => order?._id !== incomingOrder._id);
+    return [incomingOrder, ...nextOrders];
+}
 // ─── Thunks ──────────────────────────────────────────────────────
 /** Fetch orders — role-aware, replaces list (page 1) */
 export const fetchOrdersThunk = createAsyncThunk('orders/fetchOrders', async (params, { getState, rejectWithValue }) => {
@@ -105,7 +122,7 @@ const ordersSlice = createSlice({
         })
             .addCase(fetchOrdersThunk.fulfilled, (state, action) => {
             state.isLoading = false;
-            state.list = action.payload.orders;
+            state.list = dedupeOrders(action.payload.orders);
             state.pagination = action.payload.pagination;
         })
             .addCase(fetchOrdersThunk.rejected, (state, action) => {
@@ -120,7 +137,7 @@ const ordersSlice = createSlice({
             .addCase(loadMoreOrdersThunk.fulfilled, (state, action) => {
             state.isLoadingMore = false;
             if (action.payload) {
-                state.list = [...state.list, ...action.payload.orders];
+                state.list = dedupeOrders([...state.list, ...action.payload.orders]);
                 state.pagination = action.payload.pagination;
             }
         })
@@ -171,7 +188,7 @@ const ordersSlice = createSlice({
         })
             .addCase(createOrderThunk.fulfilled, (state, action) => {
             state.isLoading = false;
-            state.list.unshift(action.payload.data);
+            state.list = upsertOrderAtTop(state.list, action.payload.data);
         })
             .addCase(createOrderThunk.rejected, (state, action) => {
             state.isLoading = false;
