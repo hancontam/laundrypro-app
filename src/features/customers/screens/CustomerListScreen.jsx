@@ -179,7 +179,7 @@ export default function CustomerListScreen({ navigation }) {
       >
         <Pressable
           onPress={() => navigation.navigate("CustomerForm")}
-          className="h-14 w-14 items-center justify-center rounded-full bg-slate-900"
+          className="h-14 w-14 items-center justify-center rounded-full bg-indigo-600"
           style={({ pressed }) => [shadowCTA, pressedStyleSmall(pressed)]}
         >
           <Plus size={24} color="#fff" weight="bold" />
@@ -188,3 +188,4 @@ export default function CustomerListScreen({ navigation }) {
     </SafeAreaView>
   );
 }
+

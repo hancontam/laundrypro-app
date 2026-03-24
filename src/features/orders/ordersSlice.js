@@ -32,6 +32,58 @@ function upsertOrderAtTop(orders = [], incomingOrder) {
     const nextOrders = orders.filter((order) => order?._id !== incomingOrder._id);
     return [incomingOrder, ...nextOrders];
 }
+function normalizeCreatedOrder(order, requestPayload) {
+    if (!order?._id) {
+        return order;
+    }
+    const hasPopulatedCustomer = order.customerId && typeof order.customerId === 'object';
+    if (hasPopulatedCustomer) {
+        return order;
+    }
+    const fallbackName = requestPayload?.customerName?.trim();
+    const fallbackPhone = requestPayload?.customerPhone?.trim();
+    if (!fallbackName && !fallbackPhone) {
+        return order;
+    }
+    return {
+        ...order,
+        customerId: {
+            _id: typeof order.customerId === 'string' ? order.customerId : undefined,
+            name: fallbackName,
+            phone: fallbackPhone,
+        },
+    };
+}
+function preserveCustomerDisplayData(incomingOrder, fallbackOrder) {
+    if (!incomingOrder?._id || !fallbackOrder) {
+        return incomingOrder;
+    }
+    const hasPopulatedCustomer = incomingOrder.customerId && typeof incomingOrder.customerId === 'object';
+    if (hasPopulatedCustomer) {
+        return incomingOrder;
+    }
+    const fallbackCustomer = fallbackOrder.customerId && typeof fallbackOrder.customerId === 'object'
+        ? fallbackOrder.customerId
+        : null;
+    const fallbackName = incomingOrder.customerName || fallbackOrder.customerName || fallbackCustomer?.name;
+    const fallbackPhone = incomingOrder.customerPhone || fallbackOrder.customerPhone || fallbackCustomer?.phone;
+    if (!fallbackName && !fallbackPhone) {
+        return incomingOrder;
+    }
+    return {
+        ...incomingOrder,
+        customerName: fallbackName || incomingOrder.customerName,
+        customerPhone: fallbackPhone || incomingOrder.customerPhone,
+        customerId: fallbackCustomer
+            ? {
+                ...fallbackCustomer,
+                _id: typeof incomingOrder.customerId === 'string'
+                    ? incomingOrder.customerId
+                    : fallbackCustomer._id,
+            }
+            : incomingOrder.customerId,
+    };
+}
 // ─── Thunks ──────────────────────────────────────────────────────
 /** Fetch orders — role-aware, replaces list (page 1) */
 export const fetchOrdersThunk = createAsyncThunk('orders/fetchOrders', async (params, { getState, rejectWithValue }) => {
@@ -167,7 +219,8 @@ const ordersSlice = createSlice({
         })
             .addCase(updateOrderStatusThunk.fulfilled, (state, action) => {
             state.isLoading = false;
-            const updatedOrder = action.payload;
+            const existingOrder = state.list.find((o) => o._id === action.payload._id) || state.selectedOrder;
+            const updatedOrder = preserveCustomerDisplayData(action.payload, existingOrder);
             // Sync selectedOrder
             state.selectedOrder = updatedOrder;
             // Sync in list
@@ -188,7 +241,7 @@ const ordersSlice = createSlice({
         })
             .addCase(createOrderThunk.fulfilled, (state, action) => {
             state.isLoading = false;
-            state.list = upsertOrderAtTop(state.list, action.payload.data);
+            state.list = upsertOrderAtTop(state.list, normalizeCreatedOrder(action.payload.data, action.meta.arg));
         })
             .addCase(createOrderThunk.rejected, (state, action) => {
             state.isLoading = false;

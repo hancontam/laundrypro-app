@@ -224,7 +224,7 @@ export default function ServiceFormScreen({ navigation, route }) {
           </View>
 
           {/* Submit */}
-          <Pressable onPress={handleSubmit} disabled={isLoading || !isValid} className="flex-row items-center justify-center rounded-xl bg-slate-900 py-4" style={({ pressed }) => [
+          <Pressable onPress={handleSubmit} disabled={isLoading || !isValid} className="flex-row items-center justify-center rounded-xl bg-indigo-600 py-4" style={({ pressed }) => [
             shadowCTA,
             pressedStyle(pressed),
             { opacity: isLoading || !isValid ? 0.5 : 1 },
@@ -240,3 +240,4 @@ export default function ServiceFormScreen({ navigation, route }) {
       </KeyboardAvoidingView>
     </SafeAreaView>);
 }
+

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, ScrollView, Pressable, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { UserCircle, PencilSimple, LockKey, SignOut, CaretRight, } from "phosphor-react-native";
+import { PencilSimple, LockKey, SignOut, CaretRight, UserCircle, } from "phosphor-react-native";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { logoutThunk } from "@/features/auth/authSlice";
 import { Colors, shadowCard, pressedStyle, layoutContainer, } from "@/theme/tokens";
@@ -20,11 +20,16 @@ export default function ProfileScreen({ navigation }) {
     const dispatch = useAppDispatch();
     const { user } = useAppSelector((state) => state.auth);
     const isAdmin = user?.role === "admin";
+    const [avatarLoadFailed, setAvatarLoadFailed] = React.useState(false);
+    React.useEffect(() => {
+        setAvatarLoadFailed(false);
+    }, [user?.avatar]);
     const handleLogout = () => {
         dispatch(logoutThunk());
     };
     if (!user)
         return null;
+    const showRemoteAvatar = user.avatar && !avatarLoadFailed;
     return (<SafeAreaView className="flex-1 bg-page">
       <View className="px-6 pb-2 pt-4">
         <Text className="text-2xl font-extrabold text-slate-900">Cá nhân</Text>
@@ -33,7 +38,11 @@ export default function ProfileScreen({ navigation }) {
       <ScrollView contentContainerStyle={layoutContainer} contentContainerClassName="px-6 pb-8 pt-4">
         {/* User Info Card */}
         <View className="mb-6 flex-row items-center rounded-2xl border border-slate-100 bg-white p-5" style={shadowCard}>
-          {user.avatar ? (<Image source={{ uri: user.avatar }} className="h-16 w-16 rounded-full bg-slate-100"/>) : (<View className="h-16 w-16 items-center justify-center rounded-full bg-indigo-50">
+          {showRemoteAvatar ? (<Image source={{ uri: user.avatar }} onError={() => {
+                if (user.avatar) {
+                    setAvatarLoadFailed(true);
+                }
+            }} className="h-16 w-16 rounded-full bg-slate-100"/>) : (<View className="h-16 w-16 items-center justify-center rounded-full bg-indigo-50">
               <UserCircle size={32} color={Colors.indigo600} weight="fill"/>
             </View>)}
 

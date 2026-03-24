@@ -111,7 +111,7 @@ export default function CustomerDetailScreen({ navigation, route }) {
         </View>
 
         {/* Change Status Button */}
-        <Pressable onPress={handleToggleStatus} disabled={isLoading} className={`flex-row items-center justify-center rounded-xl py-4 ${customer.status === 'suspended' ? 'bg-slate-900' : 'bg-red-50'}`} style={({ pressed }) => [
+        <Pressable onPress={handleToggleStatus} disabled={isLoading} className={`flex-row items-center justify-center rounded-xl py-4 ${customer.status === 'suspended' ? 'bg-indigo-600' : 'bg-red-50'}`} style={({ pressed }) => [
             pressedStyleSmall(pressed),
             customer.status === 'suspended' ? shadowCTA : undefined,
             { opacity: isLoading ? 0.5 : 1 }
@@ -128,3 +128,4 @@ export default function CustomerDetailScreen({ navigation, route }) {
       </ScrollView>
     </SafeAreaView>);
 }
+

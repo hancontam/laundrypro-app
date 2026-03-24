@@ -32,9 +32,10 @@ function formatDate(iso) {
 function OrderCard({ order, currentUser, onPress, }) {
     // If order.customerId is missing or unpopulated string, fallback to currentUser (if they are a customer)
     const isPopulatedCustomer = order.customerId && typeof order.customerId === 'object';
+    const fallbackCustomerName = order.customerName || order.customerPhone;
     const displayCustomerName = isPopulatedCustomer
         ? order.customerId.name || order.customerId.phone
-        : currentUser?.name || currentUser?.phone || '—';
+        : fallbackCustomerName || (currentUser?.role === 'customer' ? currentUser?.name || currentUser?.phone : null) || '—';
     return (<Pressable onPress={onPress} className="mb-3 rounded-2xl border border-slate-100 bg-white p-4" style={({ pressed }) => [shadowCard, pressedStyle(pressed)]}>
       {/* Header: ID + Status */}
       <View className="mb-3 flex-row items-center justify-between">
@@ -182,8 +183,9 @@ export default function OrderListScreen({ navigation }) {
             </View>) : <EmptyState />) : null} refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[Colors.indigo600]} tintColor={Colors.indigo600}/>} onEndReached={handleLoadMore} onEndReachedThreshold={0.3} ListFooterComponent={renderFooter}/>
 
       {/* FAB — Staff/Admin only */}
-      {canCreate && (<Pressable onPress={() => navigation.navigate('CreateOrder')} className="absolute bottom-28 right-6 h-14 w-14 items-center justify-center rounded-full bg-slate-900" style={({ pressed }) => [shadowCTA, pressedStyleSmall(pressed)]}>
+      {canCreate && (<Pressable onPress={() => navigation.navigate('CreateOrder')} className="absolute bottom-28 right-6 h-14 w-14 items-center justify-center rounded-full bg-indigo-600" style={({ pressed }) => [shadowCTA, pressedStyleSmall(pressed)]}>
           <Plus size={24} color="#fff" weight="bold"/>
         </Pressable>)}
     </SafeAreaView>);
 }
+

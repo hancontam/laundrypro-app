@@ -48,8 +48,8 @@ export default function ContactUsScreen({ navigation }) {
         <ScrollView contentContainerStyle={layoutContainer} contentContainerClassName="flex-grow px-6 py-6" keyboardShouldPersistTaps="handled">
           {/* Title Area */}
           <View className="mb-10 items-center">
-            <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-indigo-50">
-              <PaperPlaneRight size={32} color={Colors.indigo600} weight="bold"/>
+            <View className="mb-4 h-20 w-20 items-center justify-center rounded-full bg-indigo-50">
+              <PaperPlaneRight size={36} color={Colors.indigo600} weight="bold"/>
             </View>
             <Text className="text-2xl font-extrabold text-slate-900 text-center">
               Liên hệ
@@ -112,7 +112,7 @@ export default function ContactUsScreen({ navigation }) {
             </View>
 
             {/* Submit Button */}
-            <Pressable onPress={handleSubmit} disabled={isLoading || !canSubmit} className="flex-row items-center justify-center rounded-xl bg-slate-900 py-4" style={({ pressed }) => [
+            <Pressable onPress={handleSubmit} disabled={isLoading || !canSubmit} className="flex-row items-center justify-center rounded-xl bg-indigo-600 py-4" style={({ pressed }) => [
             shadowCTA,
             pressedStyle(pressed),
             { opacity: isLoading || !canSubmit ? 0.5 : 1 },
@@ -129,3 +129,4 @@ export default function ContactUsScreen({ navigation }) {
       </KeyboardAvoidingView>
     </SafeAreaView>);
 }
+

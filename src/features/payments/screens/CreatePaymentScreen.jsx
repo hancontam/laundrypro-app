@@ -59,7 +59,7 @@ export default function CreatePaymentScreen({ navigation, route }) {
 
         <PaymentMethodSelector selectedMethod={method} onSelect={setMethod}/>
 
-        <Pressable onPress={handleCreatePayment} disabled={!method || isCreating} className={`mt-4 flex-row items-center justify-center rounded-xl py-4 ${!method ? "bg-slate-300" : "bg-slate-900"}`} style={({ pressed }) => [
+        <Pressable onPress={handleCreatePayment} disabled={!method || isCreating} className={`mt-4 flex-row items-center justify-center rounded-xl py-4 ${!method ? "bg-slate-300" : "bg-indigo-600"}`} style={({ pressed }) => [
             method && shadowCTA,
             pressedStyle(pressed),
             { opacity: isCreating || !method ? 0.7 : 1 },
@@ -74,3 +74,4 @@ export default function CreatePaymentScreen({ navigation, route }) {
       </ScrollView>
     </SafeAreaView>);
 }
+

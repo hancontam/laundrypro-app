@@ -184,7 +184,7 @@ export default function StaffListScreen({ navigation }) {
       >
         <Pressable
           onPress={() => navigation.navigate("CreateStaff")}
-          className="h-14 w-14 items-center justify-center rounded-full bg-slate-900"
+          className="h-14 w-14 items-center justify-center rounded-full bg-indigo-600"
           style={({ pressed }) => [shadowCTA, pressedStyleSmall(pressed)]}
         >
           <Plus size={24} color="#fff" weight="bold" />
@@ -193,3 +193,4 @@ export default function StaffListScreen({ navigation }) {
     </SafeAreaView>
   );
 }
+
