@@ -143,7 +143,7 @@ export default function ForgotPasswordOtpScreen({ navigation, route, }) {
                 }} maxLength={1} keyboardType="number-pad" value={digit} onChangeText={(value) => handleOtpChange(value, index)} onKeyPress={(e) => handleKeyPress(e, index)} selectTextOnFocus autoFocus={index === 0}/>))}
               </View>
 
-              <Pressable onPress={handleVerifyOtp} disabled={isVerifyingOtp || otp.some((digit) => !digit)} className="flex-row items-center justify-center rounded-xl bg-slate-900 py-4" style={({ pressed }) => [
+              <Pressable onPress={handleVerifyOtp} disabled={isVerifyingOtp || otp.some((digit) => !digit)} className="flex-row items-center justify-center rounded-xl bg-indigo-600 py-4" style={({ pressed }) => [
                 shadowCTA,
                 pressedStyle(pressed),
                 { opacity: isVerifyingOtp || otp.some((digit) => !digit) ? 0.5 : 1 },
@@ -189,7 +189,7 @@ export default function ForgotPasswordOtpScreen({ navigation, route, }) {
                 <ValidationRow label="Mật khẩu khớp nhau" isValid={hasMatch}/>
               </View>
 
-              <Pressable onPress={handleResetPassword} disabled={isSubmittingPassword || !isValidPassword} className="flex-row items-center justify-center rounded-xl bg-slate-900 py-4" style={({ pressed }) => [
+              <Pressable onPress={handleResetPassword} disabled={isSubmittingPassword || !isValidPassword} className="flex-row items-center justify-center rounded-xl bg-indigo-600 py-4" style={({ pressed }) => [
                 shadowCTA,
                 pressedStyle(pressed),
                 { opacity: isSubmittingPassword || !isValidPassword ? 0.5 : 1 },
@@ -211,3 +211,4 @@ function ValidationRow({ label, isValid }) {
       </Text>
     </View>);
 }
+

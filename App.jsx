@@ -8,6 +8,7 @@ import { Provider } from "react-redux";
 import { store } from "@/app/store";
 import AppNavigator from "@/app/navigation";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Colors } from "@/theme/tokens";
 // Prevent auto-hiding splash screen
 SplashScreen.preventAutoHideAsync();
 export default function App() {
@@ -28,9 +29,9 @@ export default function App() {
                 flex: 1,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "#F8F9FB",
+                backgroundColor: Colors.page,
             }}>
-        <ActivityIndicator size="large" color="#4F46E5"/>
+        <ActivityIndicator size="large" color={Colors.primary}/>
       </View>);
     }
     return (<Provider store={store}>

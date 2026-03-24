@@ -1,18 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, FlatList, ActivityIndicator, Text, Alert, Pressable } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { View, FlatList, ActivityIndicator, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft } from "phosphor-react-native";
 import { useAppDispatch, useAppSelector } from "@/app/store";
-import { fetchPaymentHistoryThunk, setSelectedPayment, updatePaymentStatusThunk, } from "../customerPaymentsSlice";
+import { fetchPaymentHistoryThunk, setSelectedPayment, } from "../customerPaymentsSlice";
 import PaymentHistoryItem from "../components/PaymentHistoryItem";
 import { Colors, shadowCard, shadowFloating, pressedStyleSmall } from "@/theme/tokens";
-import { PAYMENT_STATUS_ACTION_LABEL } from "@/features/payments/paymentMeta";
 import ListSearchBar from "@/components/ListSearchBar";
 import FilterChips from "@/components/FilterChips";
 export default function PaymentHistoryScreen({ navigation, route }) {
     const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.auth.user);
-    const { paymentHistory, loading, updatingPaymentId, error } = useAppSelector((state) => state.customerPayments);
+    const { paymentHistory, loading, error } = useAppSelector((state) => state.customerPayments);
     const isStaffOrAdmin = user?.role === "admin" || user?.role === "staff";
     const paymentScope = route.params?.scope === "all" ? "all" : "my";
     const canManagePayments = isStaffOrAdmin && paymentScope === "all";
@@ -57,20 +56,6 @@ export default function PaymentHistoryScreen({ navigation, route }) {
         dispatch(setSelectedPayment(payment));
         navigation.navigate("PaymentDetail");
     };
-    const handleStatusChange = useCallback((payment, status) => {
-        Alert.alert("Cập nhật trạng thái", `Bạn muốn chuyển giao dịch này sang "${PAYMENT_STATUS_ACTION_LABEL[status]}"?`, [
-            { text: "Hủy", style: "cancel" },
-            {
-                text: "Xác nhận",
-                onPress: async () => {
-                    const result = await dispatch(updatePaymentStatusThunk({ paymentId: payment._id, status }));
-                    if (updatePaymentStatusThunk.rejected.match(result)) {
-                        Alert.alert("Không thể cập nhật", result.payload || "Cập nhật trạng thái thất bại.");
-                    }
-                },
-            },
-        ]);
-    }, [dispatch]);
     const title = canManagePayments ? "Lịch sử thanh toán toàn hệ thống" : "Lịch sử thanh toán";
     const summaryTitle = showBackButton
         ? canManagePayments
@@ -113,7 +98,7 @@ export default function PaymentHistoryScreen({ navigation, route }) {
           <Text className="text-sm font-semibold text-red-600">{error}</Text>
         </View>)}
 
-      <FlatList data={filteredPayments} keyExtractor={(item) => item._id} renderItem={({ item }) => (<PaymentHistoryItem payment={item} onPress={handlePressPayment} showStatusActions={canManagePayments} isUpdating={updatingPaymentId === item._id} onStatusChange={handleStatusChange} canRefund={user?.role === "admin"}/>)} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }} ListEmptyComponent={!loading ? (<View className="mt-12 items-center justify-center">
+      <FlatList data={filteredPayments} keyExtractor={(item) => item._id} renderItem={({ item }) => (<PaymentHistoryItem payment={item} onPress={handlePressPayment}/>)} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }} ListEmptyComponent={!loading ? (<View className="mt-12 items-center justify-center">
               <Text className="text-slate-500">
                 {searchQuery.trim() || statusFilter !== "all"
                 ? "Không có giao dịch phù hợp với bộ lọc hiện tại"

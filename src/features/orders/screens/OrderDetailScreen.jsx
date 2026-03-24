@@ -1,13 +1,13 @@
 import React, { useEffect, useCallback } from "react";
 import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert, } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ArrowLeft, User, CreditCard, CheckCircle, Trash, } from "phosphor-react-native";
+import { ArrowLeft, User, CreditCard, Trash, } from "phosphor-react-native";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { fetchOrderByIdThunk, updateOrderStatusThunk, clearSelectedOrder, clearOrderError, } from "../ordersSlice";
 import { Colors, shadowCard, shadowFloating, pressedStyleSmall, layoutContainer, labelStyle, } from "@/theme/tokens";
 import PaymentSummary from "../../payments/components/PaymentSummary";
 import { updatePaymentStatusThunk } from "@/features/customerPayments/customerPaymentsSlice";
-import { ORDER_STATUS_ACTION_LABEL, ORDER_STATUS_META } from "../orderMeta";
+import { ORDER_STATUS_META } from "../orderMeta";
 import { PAYMENT_STATUS_ACTION_LABEL, getPaymentNextStatuses } from "@/features/payments/paymentMeta";
 // ─── Formatters ──────────────────────────────────────────────────
 function formatPrice(amount) {
@@ -51,32 +51,6 @@ function ItemRow({ item }) {
       </Text>
       </View>);
 }
-function ActionButton({ label, icon: Icon, onPress, disabled = false, tone = "default" }) {
-    const toneClassName = tone === "danger"
-        ? "border-red-100 bg-red-50"
-        : tone === "success"
-            ? "border-green-100 bg-green-50"
-            : "border-slate-200 bg-slate-50";
-    const textClassName = tone === "danger"
-        ? "text-red-700"
-        : tone === "success"
-            ? "text-green-700"
-            : "text-slate-700";
-    const iconColor = tone === "danger"
-        ? Colors.red600
-        : tone === "success"
-            ? Colors.green600
-            : Colors.slate700;
-    return (<Pressable onPress={onPress} disabled={disabled} className={`flex-row items-center rounded-full border px-3 py-2 ${toneClassName}`} style={({ pressed }) => [
-            pressedStyleSmall(pressed),
-            { opacity: disabled ? 0.45 : 1 },
-        ]}>
-      {Icon ? <Icon size={15} color={iconColor} weight="bold"/> : null}
-      <Text className={`text-xs font-bold ${Icon ? "ml-1.5" : ""} ${textClassName}`}>
-        {label}
-      </Text>
-    </Pressable>);
-}
 // ─── Main screen ─────────────────────────────────────────────────
 export default function OrderDetailScreen({ navigation, route }) {
     const { orderId } = route.params;
@@ -93,25 +67,24 @@ export default function OrderDetailScreen({ navigation, route }) {
             dispatch(clearSelectedOrder());
         };
     }, [dispatch, orderId]);
-    const orderStatusMeta = ORDER_STATUS_META[selectedOrder?.status] || ORDER_STATUS_META.pending;
+    const effectiveOrderStatus = selectedOrder?.status === "deleted"
+        ? "deleted"
+        : selectedOrder?.payment?.status === "paid"
+            ? "completed"
+            : selectedOrder?.status || "pending";
+    const orderStatusMeta = ORDER_STATUS_META[effectiveOrderStatus] || ORDER_STATUS_META.pending;
     const nextPaymentStatuses = getPaymentNextStatuses(selectedOrder?.payment?.status, {
         canRefund: isAdmin,
     });
+    const primaryPaymentAction = nextPaymentStatuses.includes("paid") ? "paid" : null;
+    const refundPaymentAction = nextPaymentStatuses.includes("refunded") ? "refunded" : null;
     const canCreatePayment = selectedOrder?.status === "pending" &&
         !selectedOrder?.payment &&
         isStaffOrAdmin;
     const canDeleteOrder = isStaffOrAdmin && selectedOrder?.status === "pending";
-    const canCompleteOrder = isStaffOrAdmin &&
-        selectedOrder?.status === "pending" &&
-        selectedOrder?.payment?.status === "paid";
-    const showOrderActions = isStaffOrAdmin && selectedOrder?.status !== "completed" && selectedOrder?.status !== "deleted";
-    const showPaymentActions = isStaffOrAdmin &&
-        selectedOrder?.payment &&
-        selectedOrder?.status !== "deleted";
     const handleOrderStatusChange = useCallback((status) => {
         if (!selectedOrder)
             return;
-        const actionLabel = ORDER_STATUS_ACTION_LABEL[status] || status;
         const title = status === "deleted" ? "Cập nhật đơn hàng" : "Hoàn thành đơn hàng";
         const message = status === "deleted"
             ? "Bạn có chắc muốn chuyển đơn hàng này sang trạng thái đã xóa?"
@@ -127,7 +100,19 @@ export default function OrderDetailScreen({ navigation, route }) {
                         status,
                     }));
                     if (updateOrderStatusThunk.rejected.match(result)) {
-                        Alert.alert("Không thể cập nhật", result.payload || `Không thể chuyển đơn hàng sang "${actionLabel}".`);
+                        Alert.alert("Không thể cập nhật", result.payload || "Không thể cập nhật trạng thái đơn hàng.");
+                        return;
+                    }
+                    if (status === "deleted" && selectedOrder.payment?.status === "pending") {
+                        const paymentResult = await dispatch(updatePaymentStatusThunk({
+                            paymentId: selectedOrder.payment._id,
+                            status: "failed",
+                        }));
+                        if (updatePaymentStatusThunk.rejected.match(paymentResult)) {
+                            Alert.alert("Không thể cập nhật", paymentResult.payload || "Đơn hàng đã chuyển sang đã xóa nhưng không thể chuyển thanh toán sang thất bại.");
+                            return;
+                        }
+                        dispatch(fetchOrderByIdThunk(selectedOrder._id));
                     }
                 },
             },
@@ -150,6 +135,16 @@ export default function OrderDetailScreen({ navigation, route }) {
                     if (updatePaymentStatusThunk.rejected.match(result)) {
                         Alert.alert("Không thể cập nhật", result.payload || "Cập nhật trạng thái thanh toán thất bại.");
                         return;
+                    }
+                    if (status === "paid" && selectedOrder.status !== "completed") {
+                        const completeResult = await dispatch(updateOrderStatusThunk({
+                            id: selectedOrder._id,
+                            status: "completed",
+                        }));
+                        if (updateOrderStatusThunk.rejected.match(completeResult)) {
+                            Alert.alert("Không thể cập nhật", completeResult.payload || "Thanh toán đã thành công nhưng không thể chuyển đơn hàng sang hoàn thành.");
+                            return;
+                        }
                     }
                     dispatch(fetchOrderByIdThunk(selectedOrder._id));
                 },
@@ -178,11 +173,6 @@ export default function OrderDetailScreen({ navigation, route }) {
         <Text className="flex-1 text-lg font-extrabold text-slate-900">
           Chi tiết đơn hàng
         </Text>
-        {order && (<View className={`rounded-lg px-2.5 py-1 ${orderStatusMeta.bg}`}>
-            <Text className={`text-xs font-bold ${orderStatusMeta.text}`}>
-              {orderStatusMeta.label}
-            </Text>
-          </View>)}
       </View>
 
       {/* Error */}
@@ -191,8 +181,8 @@ export default function OrderDetailScreen({ navigation, route }) {
         </View>)}
 
       {order && (<ScrollView contentContainerStyle={layoutContainer} contentContainerClassName="px-6 pb-8">
-          {/* ── Order ID + Date ── */}
-          <SectionCard title="THÔNG TIN ĐƠN">
+          {/* ── Order + customer info ── */}
+          <SectionCard title="THÔNG TIN ĐƠN HÀNG">
             <View className="flex-row items-center justify-between">
               <Text className="text-sm font-medium text-slate-500">Mã đơn</Text>
               <Text className="text-sm font-bold text-slate-900">
@@ -207,6 +197,16 @@ export default function OrderDetailScreen({ navigation, route }) {
                 {formatDate(order.createdAt)}
               </Text>
             </View>
+            <View className="mt-2 flex-row items-center justify-between">
+              <Text className="text-sm font-medium text-slate-500">
+                Trạng thái đơn hàng
+              </Text>
+              <View className={`rounded-lg px-2.5 py-1 ${orderStatusMeta.bg}`}>
+                <Text className={`text-xs font-bold ${orderStatusMeta.text}`}>
+                  {orderStatusMeta.label}
+                </Text>
+              </View>
+            </View>
             {order.completedAt && (<View className="mt-2 flex-row items-center justify-between">
                 <Text className="text-sm font-medium text-slate-500">
                   Hoàn thành
@@ -220,11 +220,8 @@ export default function OrderDetailScreen({ navigation, route }) {
                   {order.note}
                 </Text>
               </View>) : null}
-          </SectionCard>
-
-          {/* ── Customer info ── */}
-          <SectionCard title="KHÁCH HÀNG">
-            <View className="flex-row items-center gap-3">
+            <View className="mt-4 border-t border-slate-100 pt-4">
+              <View className="flex-row items-center gap-3">
               <View className="h-10 w-10 items-center justify-center rounded-full bg-indigo-50">
                 <User size={20} color={Colors.indigo600} weight="bold"/>
               </View>
@@ -261,7 +258,8 @@ export default function OrderDetailScreen({ navigation, route }) {
                         CHƯA CÓ MẬT KHẨU
                       </Text>
                     </View>)}
-                </View>)}
+                    </View>)}
+            </View>
           </SectionCard>
 
           {/* ── Items ── */}
@@ -279,25 +277,8 @@ export default function OrderDetailScreen({ navigation, route }) {
           </SectionCard>
 
           {/* ── Payment info ── */}
-          {order.payment ? (<View>
-              <PaymentSummary payment={order.payment}/>
-              {showPaymentActions && (<SectionCard title="XỬ LÝ THANH TOÁN">
-                  {updatingPaymentId === order.payment._id ? (<View className="flex-row items-center py-2">
-                      <ActivityIndicator size="small" color={Colors.indigo600}/>
-                      <Text className="ml-2 text-sm font-medium text-slate-500">
-                        Đang cập nhật thanh toán...
-                      </Text>
-                    </View>) : nextPaymentStatuses.length > 0 ? (<View className="flex-row flex-wrap gap-2">
-                      {nextPaymentStatuses.map((status) => (<ActionButton
-                          key={status}
-                          label={PAYMENT_STATUS_ACTION_LABEL[status]}
-                          onPress={() => handlePaymentStatusChange(status)}
-                          tone={status === "paid" ? "success" : status === "refunded" ? "default" : "danger"}
-                        />))}
-                    </View>) : (<Text className="text-sm font-medium text-slate-400">
-                      Không có thao tác thanh toán khả dụng.
-                    </Text>)}
-                </SectionCard>)}
+          {order.payment ? (<View className="mb-4 rounded-2xl border border-slate-100 bg-white p-4" style={shadowCard}>
+              <PaymentSummary payment={order.payment} flat/>
             </View>) : (<SectionCard title="THANH TOÁN">
               <View className="items-center py-4">
                 <CreditCard size={24} color={Colors.slate300} weight="bold"/>
@@ -315,15 +296,27 @@ export default function OrderDetailScreen({ navigation, route }) {
               </View>
             </SectionCard>)}
 
-          {showOrderActions && (<SectionCard title="XỬ LÝ ĐƠN HÀNG">
-              <View className="flex-row flex-wrap gap-2">
-                <ActionButton label="Hoàn thành" icon={CheckCircle} onPress={() => handleOrderStatusChange("completed")} disabled={!canCompleteOrder || isLoading} tone="success"/>
-                {canDeleteOrder && (<ActionButton label="Đã xóa" icon={Trash} onPress={() => handleOrderStatusChange("deleted")} disabled={isLoading} tone="danger"/>)}
-              </View>
-              {!canCompleteOrder && order.status === "pending" && (<Text className="mt-3 text-sm font-medium leading-6 text-slate-500">
-                  Đơn hàng chỉ có thể hoàn thành khi thanh toán đang ở trạng thái "Đã thanh toán".
-                </Text>)}
-            </SectionCard>)}
+          {order.payment && primaryPaymentAction && (<Pressable onPress={() => handlePaymentStatusChange(primaryPaymentAction)} className="mb-4 flex-row items-center justify-center rounded-xl bg-indigo-600 py-4" style={({ pressed }) => [
+                  pressedStyleSmall(pressed),
+                  { opacity: updatingPaymentId === order.payment._id ? 0.6 : 1 },
+              ]} disabled={updatingPaymentId === order.payment._id}>
+              {updatingPaymentId === order.payment._id ? (<ActivityIndicator size="small" color="#fff"/>) : (<Text className="text-sm font-bold text-white">Thanh toán</Text>)}
+            </Pressable>)}
+
+          {order.payment && refundPaymentAction && (<Pressable onPress={() => handlePaymentStatusChange(refundPaymentAction)} className="mb-4 flex-row items-center justify-center rounded-xl border border-slate-200 bg-white py-4" style={({ pressed }) => [
+                  pressedStyleSmall(pressed),
+                  { opacity: updatingPaymentId === order.payment._id ? 0.6 : 1 },
+              ]} disabled={updatingPaymentId === order.payment._id}>
+              {updatingPaymentId === order.payment._id ? (<ActivityIndicator size="small" color={Colors.slate700}/>) : (<Text className="text-sm font-bold text-slate-700">Hoàn tiền</Text>)}
+            </Pressable>)}
+
+          {canDeleteOrder && (<Pressable onPress={() => handleOrderStatusChange("deleted")} className="mb-2 flex-row items-center justify-center self-center px-3 py-2" style={({ pressed }) => [
+                  pressedStyleSmall(pressed),
+                  { opacity: isLoading ? 0.5 : 1 },
+              ]}>
+              <Trash size={14} color={Colors.slate500} weight="bold"/>
+              <Text className="ml-1.5 text-xs font-medium text-slate-500">Chuyển đơn hàng sang đã xóa</Text>
+            </Pressable>)}
 
         </ScrollView>)}
     </SafeAreaView>);

@@ -20,9 +20,9 @@ function InfoRow({ label, value, valueClassName = "text-slate-900", }) {
       <Text className={`text-sm font-bold ${valueClassName}`}>{value}</Text>
     </View>);
 }
-export default function PaymentSummary({ payment }) {
+export default function PaymentSummary({ payment, hideStatus = false, flat = false }) {
     const statusMeta = PAYMENT_STATUS_META[payment.status] || PAYMENT_STATUS_META.pending;
-    return (<View className="mb-4 rounded-2xl border border-slate-100 bg-white p-4" style={shadowCard}>
+    return (<View className={flat ? "mb-4" : "mb-4 rounded-2xl border border-slate-100 bg-white p-4"} style={flat ? undefined : shadowCard}>
       <Text className="mb-3 text-slate-400" style={labelStyle}>
         THÔNG TIN THANH TOÁN
       </Text>
@@ -36,7 +36,7 @@ export default function PaymentSummary({ payment }) {
 
       <InfoRow label="Phương thức" value={PAYMENT_METHOD_LABEL[payment.method] || payment.method}/>
 
-      <InfoRow label="Trạng thái" value={statusMeta.label} valueClassName={statusMeta.valueClassName}/>
+      {!hideStatus && (<InfoRow label="Trạng thái" value={statusMeta.label} valueClassName={statusMeta.valueClassName}/>)}
 
       {payment.transactionRef && (<InfoRow label="Mã GD" value={payment.transactionRef} valueClassName="text-slate-600 font-semibold text-xs"/>)}
 

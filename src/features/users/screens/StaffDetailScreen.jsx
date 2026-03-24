@@ -123,7 +123,7 @@ export default function StaffDetailScreen({ navigation, route }) {
           </SectionCard>
 
           {/* Toggle status button */}
-          <Pressable onPress={handleToggleStatus} disabled={isLoading} className={`flex-row items-center justify-center rounded-xl py-4 ${user.status === 'active' ? 'bg-red-600' : 'bg-slate-900'}`} style={({ pressed }) => [
+          <Pressable onPress={handleToggleStatus} disabled={isLoading} className={`flex-row items-center justify-center rounded-xl py-4 ${user.status === 'active' ? 'bg-red-600' : 'bg-indigo-600'}`} style={({ pressed }) => [
                 shadowCTA,
                 pressedStyle(pressed),
                 { opacity: isLoading ? 0.5 : 1 },
@@ -140,3 +140,4 @@ export default function StaffDetailScreen({ navigation, route }) {
         </ScrollView>)}
     </SafeAreaView>);
 }
+

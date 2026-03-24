@@ -69,8 +69,9 @@ export default function GuestHomeScreen({ navigation }) {
       {/* Welcome Banner */}
       <View className="mb-6 w-full rounded-2xl border border-slate-100 bg-white p-6" style={shadowCard}>
         <View className="mb-4 items-center">
-          <Text className="text-2xl font-extrabold text-slate-900">
-            LaundryPro
+          <Text className="text-2xl font-extrabold">
+            <Text style={{ color: Colors.primary }}>Laundry</Text>
+            <Text style={{ color: Colors.textPrimary }}>Pro</Text>
           </Text>
           <Text className="mt-2 text-sm font-medium text-slate-500 text-center">
             Dịch vụ giặt ủi chuyên nghiệp, tận tâm và giao nhận tận nơi.
@@ -79,7 +80,7 @@ export default function GuestHomeScreen({ navigation }) {
 
         <View className="w-full gap-3 mt-2">
           {/* Login Button */}
-          <Pressable onPress={() => navigation.navigate("Login")} className="flex-row items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-4" style={({ pressed }) => [shadowCTA, pressedStyle(pressed)]}>
+          <Pressable onPress={() => navigation.navigate("Login")} className="flex-row items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-4" style={({ pressed }) => [shadowCTA, pressedStyle(pressed)]}>
             <SignIn size={20} color="#fff" weight="bold"/>
             <Text className="text-base font-bold text-white">Đăng nhập</Text>
           </Pressable>
@@ -111,3 +112,4 @@ export default function GuestHomeScreen({ navigation }) {
       <FlatList data={list} renderItem={({ item }) => <GuestServiceCard service={item}/>} keyExtractor={(item) => item._id} contentContainerStyle={[layoutContainer, { paddingHorizontal: 24 }]} contentContainerClassName="pb-12 pt-4" ListHeaderComponent={renderHeader} ListEmptyComponent={!isLoading ? <EmptyState /> : null} refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[Colors.indigo600]} tintColor={Colors.indigo600}/>}/>
     </SafeAreaView>);
 }
+

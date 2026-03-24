@@ -116,7 +116,7 @@ export default function OtpScreen({ navigation, route }) {
           </View>
 
           {/* ── §5.2 Full-Width Submit (Dark) ── */}
-          <Pressable onPress={() => handleVerifyOtp(otp.join(''))} disabled={isLoading || otp.some((d) => !d)} className="flex-row items-center justify-center rounded-xl bg-slate-900 py-4" style={({ pressed }) => [
+          <Pressable onPress={() => handleVerifyOtp(otp.join(''))} disabled={isLoading || otp.some((d) => !d)} className="flex-row items-center justify-center rounded-xl bg-indigo-600 py-4" style={({ pressed }) => [
             shadowCTA,
             pressedStyle(pressed),
             { opacity: isLoading || otp.some((d) => !d) ? 0.5 : 1 },
@@ -127,3 +127,4 @@ export default function OtpScreen({ navigation, route }) {
       </KeyboardAvoidingView>
     </SafeAreaView>);
 }
+

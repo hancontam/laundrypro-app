@@ -3,11 +3,31 @@
 // React Native style objects for things NativeWind can't handle.
 // ─── Colors (§2) ────────────────────────────────────────────────
 export const Colors = {
-    // Structural
-    page: '#F8F9FB',
+    // Background / surfaces
+    page: '#FFFFFF',
+    paper: '#FFFFFF',
     white: '#FFFFFF',
-    slate50: '#F8FAFC',
-    slate100: '#F1F5F9',
+    // Text
+    textPrimary: '#0F172A',
+    textSecondary: '#475569',
+    // Primary
+    primaryLight: '#60A5FA',
+    primary: '#2563EB',
+    primaryDark: '#1D4ED8',
+    // Secondary
+    secondaryLight: '#5EEAD4',
+    secondary: '#14B8A6',
+    secondaryDark: '#0F766E',
+    // Semantic states
+    successLight: '#4ADE80',
+    success: '#16A34A',
+    warningLight: '#FBBF24',
+    warning: '#F59E0B',
+    errorLight: '#F87171',
+    error: '#EF4444',
+    // Backwards-compatible neutral aliases used across the app
+    slate50: '#FFFFFF',
+    slate100: '#F8FAFC',
     slate200: '#E2E8F0',
     slate300: '#CBD5E1',
     slate400: '#94A3B8',
@@ -16,18 +36,25 @@ export const Colors = {
     slate700: '#334155',
     slate800: '#1E293B',
     slate900: '#0F172A',
-    // Accent / Brand
-    indigo50: '#EEF2FF',
-    indigo100: '#E0E7FF',
-    indigo200: '#C7D2FE',
-    indigo500: '#6366F1',
-    indigo600: '#4F46E5',
-    indigo900: '#312E81',
-    // State
+    // Backwards-compatible accent aliases used across the app
+    indigo50: '#DBEAFE',
+    indigo100: '#BFDBFE',
+    indigo200: '#93C5FD',
+    indigo500: '#60A5FA',
+    indigo600: '#2563EB',
+    indigo700: '#1D4ED8',
+    indigo900: '#1E3A8A',
+    // Backwards-compatible semantic aliases
     red50: '#FEF2F2',
-    red600: '#DC2626',
-    green500: '#22C55E',
+    red200: '#FECACA',
+    red600: '#EF4444',
+    red700: '#DC2626',
+    green50: '#F0FDF4',
+    green500: '#16A34A',
     green600: '#16A34A',
+    green700: '#15803D',
+    amber50: '#FFFBEB',
+    amber500: '#F59E0B',
 };
 // ─── Shadows (§5.5) ────────────────────────────────────────────
 // NativeWind shadow utilities don't work reliably on Android.

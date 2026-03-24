@@ -112,7 +112,7 @@ export default function ContactUsScreen({ navigation }) {
             </View>
 
             {/* Submit Button */}
-            <Pressable onPress={handleSubmit} disabled={isLoading || !canSubmit} className="flex-row items-center justify-center rounded-xl bg-slate-900 py-4" style={({ pressed }) => [
+            <Pressable onPress={handleSubmit} disabled={isLoading || !canSubmit} className="flex-row items-center justify-center rounded-xl bg-indigo-600 py-4" style={({ pressed }) => [
             shadowCTA,
             pressedStyle(pressed),
             { opacity: isLoading || !canSubmit ? 0.5 : 1 },
@@ -129,3 +129,4 @@ export default function ContactUsScreen({ navigation }) {
       </KeyboardAvoidingView>
     </SafeAreaView>);
 }
+

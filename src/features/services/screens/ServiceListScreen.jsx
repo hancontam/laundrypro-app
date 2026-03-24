@@ -9,147 +9,148 @@ import ListSearchBar from '@/components/ListSearchBar';
 import FilterChips from '@/components/FilterChips';
 // ─── Format helpers ──────────────────────────────────────────────
 function formatPrice(amount) {
-    return amount.toLocaleString('vi-VN') + 'đ';
+  return amount.toLocaleString('vi-VN') + 'đ';
 }
 // ─── Service card ────────────────────────────────────────────────
 function ServiceCard({ service, onPress, }) {
-    return (<Pressable onPress={onPress} className="mb-3 flex-row items-center rounded-2xl border border-slate-100 bg-white p-4" style={({ pressed }) => [shadowCard, pressedStyle(pressed)]}>
-      {/* Icon */}
-      {service.image ? (<Image source={{ uri: service.image }} className="mr-3 h-12 w-12 rounded-full bg-slate-100" resizeMode="cover"/>) : (<View className="mr-3 h-12 w-12 items-center justify-center rounded-full bg-indigo-50">
-          <Broom size={24} color={Colors.indigo600} weight="bold"/>
-        </View>)}
+  return (<Pressable onPress={onPress} className="mb-3 flex-row items-center rounded-2xl border border-slate-100 bg-white p-4" style={({ pressed }) => [shadowCard, pressedStyle(pressed)]}>
+    {/* Icon */}
+    {service.image ? (<Image source={{ uri: service.image }} className="mr-3 h-12 w-12 rounded-full bg-slate-100" resizeMode="cover" />) : (<View className="mr-3 h-12 w-12 items-center justify-center rounded-full bg-indigo-50">
+      <Broom size={24} color={Colors.indigo600} weight="bold" />
+    </View>)}
 
-      {/* Info */}
-      <View className="flex-1">
-        <Text className="text-base font-bold text-slate-900">{service.name}</Text>
-        <View className="mt-1 flex-row items-center gap-2">
-          <Tag size={14} color={Colors.slate400} weight="bold"/>
-          <Text className="text-xs font-medium text-slate-500">
-            {service.category}
-          </Text>
-        </View>
-      </View>
-
-      {/* Price + Arrow */}
-      <View className="items-end">
-        <Text className="text-sm font-extrabold text-indigo-600">
-          {formatPrice(service.price)}
-        </Text>
-        <Text className="text-xs font-medium text-slate-400">
-          /{service.unit}
+    {/* Info */}
+    <View className="flex-1">
+      <Text className="text-base font-bold text-slate-900">{service.name}</Text>
+      <View className="mt-1 flex-row items-center gap-2">
+        <Tag size={14} color={Colors.slate400} weight="bold" />
+        <Text className="text-xs font-medium text-slate-500">
+          {service.category}
         </Text>
       </View>
+    </View>
 
-      <CaretRight size={16} color={Colors.slate400} weight="bold" style={{ marginLeft: 8 }}/>
-    </Pressable>);
+    {/* Price + Arrow */}
+    <View className="items-end">
+      <Text className="text-sm font-extrabold text-indigo-600">
+        {formatPrice(service.price)}
+      </Text>
+      <Text className="text-xs font-medium text-slate-400">
+        /{service.unit}
+      </Text>
+    </View>
+
+    <CaretRight size={16} color={Colors.slate400} weight="bold" style={{ marginLeft: 8 }} />
+  </Pressable>);
 }
 // ─── Empty state ─────────────────────────────────────────────────
 function EmptyState() {
-    return (<View className="flex-1 items-center justify-center py-20">
-      <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-indigo-50">
-        <Broom size={32} color={Colors.indigo600} weight="bold"/>
-      </View>
-      <Text className="text-lg font-extrabold text-slate-900">
-        Chưa có dịch vụ
-      </Text>
-      <Text className="mt-2 text-sm font-medium text-slate-500">
-        Danh sách dịch vụ sẽ hiển thị ở đây
-      </Text>
-    </View>);
+  return (<View className="flex-1 items-center justify-center py-20">
+    <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-indigo-50">
+      <Broom size={32} color={Colors.indigo600} weight="bold" />
+    </View>
+    <Text className="text-lg font-extrabold text-slate-900">
+      Chưa có dịch vụ
+    </Text>
+    <Text className="mt-2 text-sm font-medium text-slate-500">
+      Danh sách dịch vụ sẽ hiển thị ở đây
+    </Text>
+  </View>);
 }
 // ─── Main screen ─────────────────────────────────────────────────
 export default function ServiceListScreen({ navigation }) {
-    const dispatch = useAppDispatch();
-    const { list, categories, isLoading, error } = useAppSelector((s) => s.services);
-    const userRole = useAppSelector((s) => s.auth.user?.role);
-    const isAdmin = userRole === 'admin';
-    const [searchQuery, setSearchQuery] = useState('');
-    const [debouncedSearch, setDebouncedSearch] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('all');
-    const [visibilityFilter, setVisibilityFilter] = useState('all');
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            setDebouncedSearch(searchQuery.trim());
-        }, 250);
-        return () => clearTimeout(timeoutId);
-    }, [searchQuery]);
-    useEffect(() => {
-        dispatch(fetchCategoriesThunk());
-    }, [dispatch]);
-    useEffect(() => {
-        dispatch(fetchServicesThunk(undefined));
-    }, [dispatch]);
-    const handleRefresh = useCallback(() => {
-        dispatch(fetchServicesThunk(undefined));
-    }, [dispatch]);
-    const categoryOptions = useMemo(() => ([
-        { label: 'Tất cả', value: 'all' },
-        ...categories.map((category) => ({
-            label: category,
-            value: category,
-        })),
-    ]), [categories]);
-    const visibilityOptions = useMemo(() => ([
-        { label: 'Tất cả', value: 'all' },
-        { label: 'Đang hoạt động', value: 'active' },
-        { label: 'Đang ẩn', value: 'hidden' },
-    ]), []);
-    const filteredServices = useMemo(() => {
-        const normalizedSearch = debouncedSearch.toLowerCase();
-        return list.filter((service) => {
-            if (categoryFilter !== 'all' && service.category !== categoryFilter) {
-                return false;
-            }
-            if (visibilityFilter === 'active' && service.active === false) {
-                return false;
-            }
-            if (visibilityFilter === 'hidden' && service.active !== false) {
-                return false;
-            }
-            if (!normalizedSearch) {
-                return true;
-            }
-            const haystack = [service.name, service.category, service.unit]
-                .filter(Boolean)
-                .join(' ')
-                .toLowerCase();
-            return haystack.includes(normalizedSearch);
-        });
-    }, [categoryFilter, debouncedSearch, list, visibilityFilter]);
-    const renderItem = useCallback(({ item }) => (<ServiceCard service={item} onPress={() => navigation.navigate('ServiceDetail', { serviceId: item._id })}/>), [navigation]);
-    return (<SafeAreaView className="flex-1 bg-page">
-      {/* Header */}
-      <View className="px-6 pb-2 pt-4">
-        <Text className="text-2xl font-extrabold text-slate-900">Dịch vụ</Text>
+  const dispatch = useAppDispatch();
+  const { list, categories, isLoading, error } = useAppSelector((s) => s.services);
+  const userRole = useAppSelector((s) => s.auth.user?.role);
+  const isAdmin = userRole === 'admin';
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [visibilityFilter, setVisibilityFilter] = useState('active');
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 250);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+  useEffect(() => {
+    dispatch(fetchCategoriesThunk());
+  }, [dispatch]);
+  useEffect(() => {
+    dispatch(fetchServicesThunk(undefined));
+  }, [dispatch]);
+  const handleRefresh = useCallback(() => {
+    dispatch(fetchServicesThunk(undefined));
+  }, [dispatch]);
+  const categoryOptions = useMemo(() => ([
+    { label: 'Tất cả', value: 'all' },
+    ...categories.map((category) => ({
+      label: category,
+      value: category,
+    })),
+  ]), [categories]);
+  const visibilityOptions = useMemo(() => ([
+    { label: 'Tất cả', value: 'all' },
+    { label: 'Đang hoạt động', value: 'active' },
+    { label: 'Đang ẩn', value: 'hidden' },
+  ]), []);
+  const filteredServices = useMemo(() => {
+    const normalizedSearch = debouncedSearch.toLowerCase();
+    return list.filter((service) => {
+      if (categoryFilter !== 'all' && service.category !== categoryFilter) {
+        return false;
+      }
+      if (visibilityFilter === 'active' && service.active === false) {
+        return false;
+      }
+      if (visibilityFilter === 'hidden' && service.active !== false) {
+        return false;
+      }
+      if (!normalizedSearch) {
+        return true;
+      }
+      const haystack = [service.name, service.category, service.unit]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(normalizedSearch);
+    });
+  }, [categoryFilter, debouncedSearch, list, visibilityFilter]);
+  const renderItem = useCallback(({ item }) => (<ServiceCard service={item} onPress={() => navigation.navigate('ServiceDetail', { serviceId: item._id })} />), [navigation]);
+  return (<SafeAreaView className="flex-1 bg-page">
+    {/* Header */}
+    <View className="px-6 pb-2 pt-4">
+      <Text className="text-2xl font-extrabold text-slate-900">Dịch vụ</Text>
+    </View>
+
+    <View className="px-6 pb-4">
+      <ListSearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Tìm theo tên dịch vụ hoặc danh mục..." isLoading={isLoading} />
+      <View className="mt-3">
+        <FilterChips options={categoryOptions} value={categoryFilter} onChange={setCategoryFilter} />
       </View>
+      {isAdmin && (<View className="mt-3">
+        <FilterChips options={visibilityOptions} value={visibilityFilter} onChange={setVisibilityFilter} />
+      </View>)}
+    </View>
 
-      <View className="px-6 pb-4">
-        <ListSearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Tìm theo tên dịch vụ hoặc danh mục..." isLoading={isLoading}/>
-        <View className="mt-3">
-          <FilterChips options={categoryOptions} value={categoryFilter} onChange={setCategoryFilter}/>
-        </View>
-        {isAdmin && (<View className="mt-3">
-            <FilterChips options={visibilityOptions} value={visibilityFilter} onChange={setVisibilityFilter}/>
-          </View>)}
-      </View>
+    {/* Error */}
+    {error && (<View className="mx-6 mb-2 rounded-xl bg-red-50 px-4 py-3">
+      <Text className="text-sm font-semibold text-red-600">{error}</Text>
+    </View>)}
 
-      {/* Error */}
-      {error && (<View className="mx-6 mb-2 rounded-xl bg-red-50 px-4 py-3">
-          <Text className="text-sm font-semibold text-red-600">{error}</Text>
-        </View>)}
+    <FlatList data={filteredServices} renderItem={renderItem} keyExtractor={(item) => item._id} contentContainerStyle={[layoutContainer, { paddingHorizontal: 24 }]} contentContainerClassName="pb-24" ListEmptyComponent={!isLoading ? (searchQuery.trim() || categoryFilter !== 'all' || visibilityFilter !== 'all' ? (<View className="flex-1 items-center justify-center py-20">
+      <Text className="text-lg font-extrabold text-slate-900">
+        Không tìm thấy dịch vụ phù hợp
+      </Text>
+      <Text className="mt-2 text-sm font-medium text-slate-500">
+        Thử đổi từ khóa hoặc bộ lọc để xem thêm kết quả.
+      </Text>
+    </View>) : <EmptyState />) : null} refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[Colors.indigo600]} tintColor={Colors.indigo600} />} />
 
-      <FlatList data={filteredServices} renderItem={renderItem} keyExtractor={(item) => item._id} contentContainerStyle={[layoutContainer, { paddingHorizontal: 24 }]} contentContainerClassName="pb-24" ListEmptyComponent={!isLoading ? (searchQuery.trim() || categoryFilter !== 'all' || visibilityFilter !== 'all' ? (<View className="flex-1 items-center justify-center py-20">
-              <Text className="text-lg font-extrabold text-slate-900">
-                Không tìm thấy dịch vụ phù hợp
-              </Text>
-              <Text className="mt-2 text-sm font-medium text-slate-500">
-                Thử đổi từ khóa hoặc bộ lọc để xem thêm kết quả.
-              </Text>
-            </View>) : <EmptyState />) : null} refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[Colors.indigo600]} tintColor={Colors.indigo600}/>}/>
-
-      {/* FAB — Admin only */}
-      {userRole === 'admin' && (<Pressable onPress={() => navigation.navigate('ServiceForm', undefined)} className="absolute bottom-28 right-6 h-14 w-14 items-center justify-center rounded-full bg-slate-900" style={({ pressed }) => [shadowCTA, pressedStyleSmall(pressed)]}>
-          <Plus size={24} color="#fff" weight="bold"/>
-        </Pressable>)}
-    </SafeAreaView>);
+    {/* FAB — Admin only */}
+    {userRole === 'admin' && (<Pressable onPress={() => navigation.navigate('ServiceForm', undefined)} className="absolute bottom-28 right-6 h-14 w-14 items-center justify-center rounded-full bg-indigo-600" style={({ pressed }) => [shadowCTA, pressedStyleSmall(pressed)]}>
+      <Plus size={24} color="#fff" weight="bold" />
+    </Pressable>)}
+  </SafeAreaView>);
 }
+
