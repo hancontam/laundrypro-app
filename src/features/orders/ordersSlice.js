@@ -10,6 +10,7 @@ import * as ordersService from './ordersService';
 const initialState = {
     list: [],
     selectedOrder: null,
+    selectedOrderRequestId: null,
     pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
     isLoading: false,
     isLoadingMore: false,
@@ -31,6 +32,32 @@ function upsertOrderAtTop(orders = [], incomingOrder) {
     }
     const nextOrders = orders.filter((order) => order?._id !== incomingOrder._id);
     return [incomingOrder, ...nextOrders];
+}
+function preservePopulatedRelation(existingValue, incomingValue) {
+    const existingIsObject = existingValue && typeof existingValue === 'object';
+    const incomingIsObject = incomingValue && typeof incomingValue === 'object';
+    if (incomingIsObject || !existingIsObject) {
+        return incomingValue;
+    }
+    const existingId = existingValue?._id ?? existingValue?.id;
+    if (!existingId || incomingValue === existingId) {
+        return existingValue;
+    }
+    return incomingValue;
+}
+function mergeOrderSnapshot(existingOrder, incomingOrder) {
+    if (!existingOrder) {
+        return incomingOrder;
+    }
+    if (!incomingOrder) {
+        return existingOrder;
+    }
+    return {
+        ...existingOrder,
+        ...incomingOrder,
+        customerId: preservePopulatedRelation(existingOrder.customerId, incomingOrder.customerId),
+        payment: preservePopulatedRelation(existingOrder.payment, incomingOrder.payment),
+    };
 }
 // ─── Thunks ──────────────────────────────────────────────────────
 /** Fetch orders — role-aware, replaces list (page 1) */
@@ -111,6 +138,7 @@ const ordersSlice = createSlice({
         },
         clearSelectedOrder(state) {
             state.selectedOrder = null;
+            state.selectedOrderRequestId = null;
         },
     },
     extraReducers: (builder) => {
@@ -147,17 +175,30 @@ const ordersSlice = createSlice({
         });
         // ── fetchOrderById ──
         builder
-            .addCase(fetchOrderByIdThunk.pending, (state) => {
+            .addCase(fetchOrderByIdThunk.pending, (state, action) => {
             state.isLoading = true;
             state.error = null;
+            state.selectedOrderRequestId = action.meta.requestId;
+            if (state.selectedOrder?._id !== action.meta.arg) {
+                state.selectedOrder = null;
+            }
         })
             .addCase(fetchOrderByIdThunk.fulfilled, (state, action) => {
+            if (state.selectedOrderRequestId !== action.meta.requestId) {
+                return;
+            }
             state.isLoading = false;
             state.selectedOrder = action.payload;
+            state.selectedOrderRequestId = null;
         })
             .addCase(fetchOrderByIdThunk.rejected, (state, action) => {
+            if (state.selectedOrderRequestId !== action.meta.requestId) {
+                return;
+            }
             state.isLoading = false;
             state.error = action.payload;
+            state.selectedOrder = null;
+            state.selectedOrderRequestId = null;
         });
         // ── updateOrderStatus — sync both selectedOrder AND list ──
         builder
@@ -169,11 +210,13 @@ const ordersSlice = createSlice({
             state.isLoading = false;
             const updatedOrder = action.payload;
             // Sync selectedOrder
-            state.selectedOrder = updatedOrder;
+            if (state.selectedOrder?._id === updatedOrder._id) {
+                state.selectedOrder = mergeOrderSnapshot(state.selectedOrder, updatedOrder);
+            }
             // Sync in list
             const index = state.list.findIndex((o) => o._id === updatedOrder._id);
             if (index !== -1) {
-                state.list[index] = updatedOrder;
+                state.list[index] = mergeOrderSnapshot(state.list[index], updatedOrder);
             }
         })
             .addCase(updateOrderStatusThunk.rejected, (state, action) => {

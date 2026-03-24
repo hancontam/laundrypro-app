@@ -93,23 +93,24 @@ export default function OrderDetailScreen({ navigation, route }) {
             dispatch(clearSelectedOrder());
         };
     }, [dispatch, orderId]);
-    const orderStatusMeta = ORDER_STATUS_META[selectedOrder?.status] || ORDER_STATUS_META.pending;
-    const nextPaymentStatuses = getPaymentNextStatuses(selectedOrder?.payment?.status, {
+    const order = selectedOrder?._id === orderId ? selectedOrder : null;
+    const orderStatusMeta = ORDER_STATUS_META[order?.status] || ORDER_STATUS_META.pending;
+    const nextPaymentStatuses = getPaymentNextStatuses(order?.payment?.status, {
         canRefund: isAdmin,
     });
-    const canCreatePayment = selectedOrder?.status === "pending" &&
-        !selectedOrder?.payment &&
+    const canCreatePayment = order?.status === "pending" &&
+        !order?.payment &&
         isStaffOrAdmin;
-    const canDeleteOrder = isStaffOrAdmin && selectedOrder?.status === "pending";
+    const canDeleteOrder = isStaffOrAdmin && order?.status === "pending";
     const canCompleteOrder = isStaffOrAdmin &&
-        selectedOrder?.status === "pending" &&
-        selectedOrder?.payment?.status === "paid";
-    const showOrderActions = isStaffOrAdmin && selectedOrder?.status !== "completed" && selectedOrder?.status !== "deleted";
+        order?.status === "pending" &&
+        order?.payment?.status === "paid";
+    const showOrderActions = isStaffOrAdmin && order?.status !== "completed" && order?.status !== "deleted";
     const showPaymentActions = isStaffOrAdmin &&
-        selectedOrder?.payment &&
-        selectedOrder?.status !== "deleted";
+        order?.payment &&
+        order?.status !== "deleted";
     const handleOrderStatusChange = useCallback((status) => {
-        if (!selectedOrder)
+        if (!order)
             return;
         const actionLabel = ORDER_STATUS_ACTION_LABEL[status] || status;
         const title = status === "deleted" ? "Cập nhật đơn hàng" : "Hoàn thành đơn hàng";
@@ -123,18 +124,26 @@ export default function OrderDetailScreen({ navigation, route }) {
                 onPress: async () => {
                     dispatch(clearOrderError());
                     const result = await dispatch(updateOrderStatusThunk({
-                        id: selectedOrder._id,
+                        id: order._id,
                         status,
                     }));
                     if (updateOrderStatusThunk.rejected.match(result)) {
                         Alert.alert("Không thể cập nhật", result.payload || `Không thể chuyển đơn hàng sang "${actionLabel}".`);
+                        return;
+                    }
+                    if (status === "deleted") {
+                        if (navigation.canGoBack()) {
+                            navigation.goBack();
+                            return;
+                        }
+                        navigation.navigate("OrderList");
                     }
                 },
             },
         ]);
-    }, [selectedOrder, dispatch]);
+    }, [dispatch, navigation, order]);
     const handlePaymentStatusChange = useCallback((status) => {
-        if (!selectedOrder?.payment) {
+        if (!order?.payment) {
             return;
         }
         const nextLabel = PAYMENT_STATUS_ACTION_LABEL[status] || status;
@@ -144,24 +153,23 @@ export default function OrderDetailScreen({ navigation, route }) {
                 text: "Xác nhận",
                 onPress: async () => {
                     const result = await dispatch(updatePaymentStatusThunk({
-                        paymentId: selectedOrder.payment._id,
+                        paymentId: order.payment._id,
                         status,
                     }));
                     if (updatePaymentStatusThunk.rejected.match(result)) {
                         Alert.alert("Không thể cập nhật", result.payload || "Cập nhật trạng thái thanh toán thất bại.");
                         return;
                     }
-                    dispatch(fetchOrderByIdThunk(selectedOrder._id));
+                    dispatch(fetchOrderByIdThunk(order._id));
                 },
             },
         ]);
-    }, [dispatch, selectedOrder]);
-    if (isLoading && !selectedOrder) {
+    }, [dispatch, order]);
+    if (isLoading && !order) {
         return (<SafeAreaView className="flex-1 items-center justify-center bg-page">
         <ActivityIndicator size="large" color={Colors.indigo600}/>
       </SafeAreaView>);
     }
-    const order = selectedOrder;
     const isPopulatedCustomer = order?.customerId && typeof order?.customerId === "object";
     const displayCustomerName = isPopulatedCustomer
         ? order.customerId.name || order.customerId.phone || "—"
