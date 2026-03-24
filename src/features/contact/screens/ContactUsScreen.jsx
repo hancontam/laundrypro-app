@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, ActivityIndicator, Alert, KeyboardAvoidingView, ScrollView, Platform, } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator, Alert, KeyboardAvoidingView, ScrollView, Platform, Image, } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, PaperPlaneRight, User, EnvelopeSimple, ChatCircleText, TextT, } from "phosphor-react-native";
 import { sendContactMessage } from "../contactService";
@@ -48,9 +48,7 @@ export default function ContactUsScreen({ navigation }) {
         <ScrollView contentContainerStyle={layoutContainer} contentContainerClassName="flex-grow px-6 py-6" keyboardShouldPersistTaps="handled">
           {/* Title Area */}
           <View className="mb-10 items-center">
-            <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-indigo-50">
-              <PaperPlaneRight size={32} color={Colors.indigo600} weight="bold"/>
-            </View>
+            <Image source={require("../../../../assets/visual/9.png")} className="mb-4 h-28 w-28" resizeMode="contain"/>
             <Text className="text-2xl font-extrabold text-slate-900 text-center">
               Liên hệ
             </Text>
