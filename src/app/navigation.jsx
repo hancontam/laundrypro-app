@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView, Image } from "react-native";
 import {
   NavigationContainer,
   getFocusedRouteNameFromRoute,
@@ -176,6 +176,12 @@ function HomeScreen({ navigation }) {
   const { user } = useAppSelector((state) => state.auth);
   const isStaffOrAdmin = user?.role === "staff" || user?.role === "admin";
   const [shortcutContainerWidth, setShortcutContainerWidth] = React.useState(0);
+  const homeMascotSource =
+    user?.role === "admin"
+      ? require("../../assets/visual/6.png")
+      : user?.role === "staff"
+        ? require("../../assets/visual/8.png")
+        : require("../../assets/visual/5.png");
   const shortcuts = [
     {
       key: "orders",
@@ -234,24 +240,32 @@ function HomeScreen({ navigation }) {
           colors={[Colors.indigo600, Colors.indigo500]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="mb-6 rounded-[28px] px-5 py-6"
+          className="relative mb-6 overflow-hidden rounded-[28px] px-5 py-6"
           style={shadowFloating}
         >
-          <Text className="text-sm font-semibold text-indigo-100">
-            LaundryPro
-          </Text>
-          <Text className="mt-2 text-2xl font-extrabold text-white">
-            {user?.name || "Xin chào"}
-          </Text>
-          <Text className="mt-2 text-sm font-medium leading-6 text-indigo-100">
-            {user?.phone || "Chưa cập nhật số điện thoại"}
-          </Text>
-
-          <View className="mt-5 self-start rounded-full bg-white/15 px-3 py-1.5">
-            <Text className="text-xs font-bold uppercase tracking-[1px] text-white">
-              {user?.role || "user"}
+          <View className="pr-24">
+            <Text className="text-sm font-semibold text-indigo-100">
+              LaundryPro
             </Text>
+            <Text className="mt-2 text-2xl font-extrabold text-white">
+              {user?.name || "Xin chào"}
+            </Text>
+            <Text className="mt-2 text-sm font-medium leading-6 text-indigo-100">
+              {user?.phone || "Chưa cập nhật số điện thoại"}
+            </Text>
+
+            <View className="mt-5 self-start rounded-full bg-white/15 px-3 py-1.5">
+              <Text className="text-xs font-bold uppercase tracking-[1px] text-white">
+                {user?.role || "user"}
+              </Text>
+            </View>
           </View>
+
+          <Image
+            source={homeMascotSource}
+            className="absolute bottom-0 right-1 h-28 w-28"
+            resizeMode="contain"
+          />
         </LinearGradient>
 
         <SectionTitle title="LỐI TẮT" />

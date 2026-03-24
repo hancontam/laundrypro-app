@@ -41,21 +41,13 @@ function GuestServiceCard({ service, cardWidth, compact, }) {
           Tính theo /{service.unit || "món"}
         </Text>
 
-        <View className={`mt-4 ${compact ? "gap-3" : "flex-row items-end justify-between"}`}>
-          <View className={compact ? "" : "flex-1 pr-3"}>
-            <Text className="text-xs font-semibold uppercase tracking-[1px] text-slate-400">
-              {compact ? "Giá" : "Giá dịch vụ"}
-            </Text>
-            <Text className={`${compact ? "text-[18px]" : "text-xl"} mt-1 font-extrabold text-slate-900`} numberOfLines={1}>
-              {formatPrice(service.price)}
-            </Text>
-          </View>
-
-          <View className={`rounded-2xl bg-indigo-50 ${compact ? "self-start px-4 py-2.5" : "px-3 py-2"}`}>
-            <Text className="text-xs font-extrabold text-indigo-600">
-              Xem giá
-            </Text>
-          </View>
+        <View className="mt-4">
+          <Text className="text-xs font-semibold uppercase tracking-[1px] text-slate-400">
+            {compact ? "Giá" : "Giá dịch vụ"}
+          </Text>
+          <Text className={`${compact ? "text-[18px]" : "text-xl"} mt-1 font-extrabold text-slate-900`} numberOfLines={1}>
+            {formatPrice(service.price)}
+          </Text>
         </View>
       </View>
     </View>);
