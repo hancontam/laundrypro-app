@@ -1,5 +1,5 @@
-import React, { useEffect, useCallback } from "react";
-import { View, Text, FlatList, Pressable, RefreshControl, Image, } from "react-native";
+import React, { useEffect, useCallback, useState } from "react";
+import { View, Text, FlatList, Pressable, RefreshControl, Image, useWindowDimensions, } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Broom, Tag, SignIn, ChatCircleText, } from "phosphor-react-native";
 import { useAppDispatch, useAppSelector } from "@/app/store";
@@ -10,35 +10,53 @@ function formatPrice(amount) {
     return amount.toLocaleString("vi-VN") + "đ";
 }
 // ─── Service card ────────────────────────────────────────────────
-function GuestServiceCard({ service }) {
-    // Read-only card for guests. No onPress.
-    return (<View className="mb-3 flex-row items-center rounded-2xl border border-slate-100 bg-white p-4" style={shadowCard}>
-      {/* Image / Fallback Icon */}
-      {service.image ? (<Image source={{ uri: service.image }} className="mr-3 h-12 w-12 rounded-full bg-slate-100" resizeMode="cover"/>) : (<View className="mr-3 h-12 w-12 items-center justify-center rounded-full bg-indigo-50">
-          <Broom size={24} color={Colors.indigo600} weight="bold"/>
-        </View>)}
+function GuestServiceCard({ service, cardWidth, compact, }) {
+    const [imageFailed, setImageFailed] = useState(false);
+    useEffect(() => {
+        setImageFailed(false);
+    }, [service.image]);
+    return (<View className="mb-4 overflow-hidden rounded-[26px] border border-slate-100 bg-white" style={[shadowCard, { width: cardWidth }]}>
+      <View className="relative">
+        {service.image && !imageFailed ? (<Image source={{ uri: service.image }} className={`${compact ? "h-36" : "h-44"} w-full bg-slate-100`} resizeMode="cover" onError={() => setImageFailed(true)}/>) : (<View className={`${compact ? "h-36" : "h-44"} w-full items-center justify-center bg-indigo-50`}>
+            <View className="h-16 w-16 items-center justify-center rounded-full bg-white/80">
+              <Broom size={30} color={Colors.indigo600} weight="bold"/>
+            </View>
+          </View>)}
 
-      {/* Info */}
-      <View className="flex-1">
-        <Text className="text-base font-bold text-slate-900">
-          {service.name}
-        </Text>
-        <View className="mt-1 flex-row items-center gap-2">
-          <Tag size={14} color={Colors.slate400} weight="bold"/>
-          <Text className="text-xs font-medium text-slate-500">
-            {service.category}
-          </Text>
+        <View className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1.5">
+          <View className="flex-row items-center gap-1.5">
+            <Tag size={12} color={Colors.slate500} weight="bold"/>
+            <Text className="text-[11px] font-bold text-slate-600">
+              {service.category || "Dịch vụ"}
+            </Text>
+          </View>
         </View>
       </View>
 
-      {/* Price */}
-      <View className="items-end">
-        <Text className="text-sm font-extrabold text-indigo-600">
-          {formatPrice(service.price)}
+      <View className="p-4">
+        <Text className={`${compact ? "text-[15px]" : "text-base"} font-extrabold text-slate-900`} numberOfLines={2}>
+          {service.name}
         </Text>
-        <Text className="text-xs font-medium text-slate-400">
-          /{service.unit}
+        <Text className="mt-1 text-xs font-medium text-slate-400" numberOfLines={1}>
+          Tính theo /{service.unit || "món"}
         </Text>
+
+        <View className={`mt-4 ${compact ? "gap-3" : "flex-row items-end justify-between"}`}>
+          <View className={compact ? "" : "flex-1 pr-3"}>
+            <Text className="text-xs font-semibold uppercase tracking-[1px] text-slate-400">
+              {compact ? "Giá" : "Giá dịch vụ"}
+            </Text>
+            <Text className={`${compact ? "text-[18px]" : "text-xl"} mt-1 font-extrabold text-slate-900`} numberOfLines={1}>
+              {formatPrice(service.price)}
+            </Text>
+          </View>
+
+          <View className={`rounded-2xl bg-indigo-50 ${compact ? "self-start px-4 py-2.5" : "px-3 py-2"}`}>
+            <Text className="text-xs font-extrabold text-indigo-600">
+              Xem giá
+            </Text>
+          </View>
+        </View>
       </View>
     </View>);
 }
@@ -59,16 +77,26 @@ function EmptyState() {
 export default function GuestHomeScreen({ navigation }) {
     const dispatch = useAppDispatch();
     const { list, isLoading, error } = useAppSelector((s) => s.services);
+    const { width } = useWindowDimensions();
     useEffect(() => {
         dispatch(fetchServicesThunk(undefined));
     }, [dispatch]);
     const handleRefresh = useCallback(() => {
         dispatch(fetchServicesThunk(undefined));
     }, [dispatch]);
+    const horizontalPadding = 48;
+    const columnGap = 12;
+    const contentWidth = Math.min(width, layoutContainer.maxWidth) - horizontalPadding;
+    const numColumns = contentWidth >= 420 ? 2 : 1;
+    const cardWidth = numColumns === 2
+        ? Math.floor((contentWidth - columnGap) / 2)
+        : Math.max(contentWidth, 0);
+    const compactCard = numColumns === 2 && cardWidth < 220;
     const renderHeader = () => (<View className="mb-8 mt-2">
       {/* Welcome Banner */}
       <View className="mb-6 w-full rounded-2xl border border-slate-100 bg-white p-6" style={shadowCard}>
         <View className="mb-4 items-center">
+          <Image source={require("../../../../assets/visual/2.png")} className="mb-4 h-28 w-28" resizeMode="contain"/>
           <Text className="text-2xl font-extrabold text-slate-900">
             LaundryPro
           </Text>
@@ -108,6 +136,6 @@ export default function GuestHomeScreen({ navigation }) {
         </View>)}
     </View>);
     return (<SafeAreaView className="flex-1 bg-page">
-      <FlatList data={list} renderItem={({ item }) => <GuestServiceCard service={item}/>} keyExtractor={(item) => item._id} contentContainerStyle={[layoutContainer, { paddingHorizontal: 24 }]} contentContainerClassName="pb-12 pt-4" ListHeaderComponent={renderHeader} ListEmptyComponent={!isLoading ? <EmptyState /> : null} refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[Colors.indigo600]} tintColor={Colors.indigo600}/>}/>
+      <FlatList data={list} renderItem={({ item }) => (<GuestServiceCard service={item} cardWidth={cardWidth} compact={compactCard}/>)} keyExtractor={(item) => item._id} numColumns={numColumns} key={numColumns} columnWrapperStyle={numColumns > 1 ? { justifyContent: "space-between" } : undefined} contentContainerStyle={[layoutContainer, { paddingHorizontal: 24 }]} contentContainerClassName="pb-12 pt-4" ListHeaderComponent={renderHeader} ListEmptyComponent={!isLoading ? <EmptyState /> : null} refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[Colors.indigo600]} tintColor={Colors.indigo600}/>}/>
     </SafeAreaView>);
 }
